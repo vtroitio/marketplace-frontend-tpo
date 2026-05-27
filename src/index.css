@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #e60012;
+  --color-secondary: #1a1c1c;
+  --color-tertiary: #5f5e5e;
+  --color-neutral: #fafafa;
+
+  --font-logo: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--color-secondary);
+    background: var(--color-neutral);
+    font-family: var(--font-body);
+  }
+
+  h1 {
+    @apply font-body text-[5rem] font-black leading-20 tracking-[-3.25%];
+  }
+
+  h2 {
+    @apply font-body text-[3rem] uppercase font-bold tracking-[-0.96%];
+  }
+
+  h3 {
+    @apply font-body text-4xl uppercase font-bold leading-9;
+  }
+
+  p {
+    @apply font-body text-lg font-normal leading-6;
+  }
+
+  a {
+    @apply font-body text-lg uppercase font-bold text-tertiary leading-6 tracking-[1.2px];
+  }
+
+  button {
+    @apply cursor-pointer uppercase text-xs font-bold px-8 py-4 leading-3 tracking-[1.2px];
+  }
+}
