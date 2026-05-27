@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LeftArrowIcon, PlusIcon, RightArrowIcon } from "../components/icons";
 import { Footer, NavBar } from "../components/layout";
-import { Button, Link, Logo, Input, Textarea, Select } from "../components/ui";
+import { Button, AppLink, Logo, Input, Textarea, Select } from "../components/ui";
 
 export function ComponentsPage() {
   const [selectedOption, setSelectedOption] = useState("");
@@ -33,18 +33,18 @@ export function ComponentsPage() {
         <div className="flex flex-col gap-4">
           <h3>Links</h3>
           <div className="flex flex-col gap-4">
-            <Link href="#">Link</Link>
-            <Link href="#">
+            <AppLink href="#">Link</AppLink>
+            <AppLink href="#">
               <span>Link</span>
               <RightArrowIcon />
-            </Link>
-            <Link href="#">
+            </AppLink>
+            <AppLink href="#">
               <LeftArrowIcon />
               <span>Link</span>
-            </Link>
-            <Link variant="underline" href="#">
+            </AppLink>
+            <AppLink variant="underline" href="#">
               Link
-            </Link>
+            </AppLink>
           </div>
         </div>
 

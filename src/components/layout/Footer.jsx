@@ -1,4 +1,4 @@
-import { Logo, Link } from "../ui";
+import { Logo, AppLink } from "../ui";
 
 export function Footer() {
   return (
@@ -13,13 +13,13 @@ export function Footer() {
           </div>
 
           <nav className="flex flex-col gap-4">
-            <Link href="#">Inicio</Link>
-            <Link href="#">Explorar</Link>
+            <AppLink to="/">Inicio</AppLink>
+            <AppLink to="/explore">Explorar</AppLink>
           </nav>
 
           <nav className="flex flex-col gap-4">
-            <Link href="#">Nosotros</Link>
-            <Link href="#">Vender</Link>
+            <AppLink to="/about">Nosotros</AppLink>
+            <AppLink to="/sell">Vender</AppLink>
           </nav>
         </div>
 
