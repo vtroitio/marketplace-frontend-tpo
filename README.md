@@ -4,6 +4,15 @@ Frontend del sistema Marketplace desarrollado como Trabajo Práctico Obligatorio
 
 SKINDEX está desarrollado con **React + Vite + Tailwind CSS**, un marketplace de moda geek.
 
+## Integrantes
+
+| Alumno                  | LU      | Mail UADE                    |
+|-------------------------|---------|------------------------------|
+| Garcia, Matias Nicolas  | 1184534 | <matiasngarcia@uade.edu.ar>  |
+| Giulietti, Juan Manuel  | 1199949 | <jgiulietti@uade.edu.ar>     |
+| Rodriguez, Tobias       | 1177362 | <tobiarodriguez@uade.edu.ar> |
+| Troitiño, Valentin Blas | 1205019 | <vtroitino@uade.edu.ar>      |
+
 ## Requisitos previos
 
 Antes de instalar el proyecto, asegurate de tener instalado:
