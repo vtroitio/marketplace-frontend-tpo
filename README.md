@@ -106,25 +106,25 @@ También permite recibir contenido interno mediante `children`, por lo que se pu
 
 ---
 
-### `Link`
+### `AppLink`
 
 Componente utilizado para enlaces de navegación o acciones que llevan a otra sección.
 
 Recibe el contenido como `children`, lo que permite usar texto solo o texto acompañado de iconos.
 
 ```jsx
-<Link href="#">
-  Link
-</Link>
+<AppLink href="#">
+  AppLink
+</AppLink>
 ```
 
 Con icono:
 
 ```jsx
-<Link variant="underline" href="#">
+<AppLink variant="underline" href="#">
   <span>Ver más</span>
   <RightArrowIcon />
-</Link>
+</AppLink>
 ```
 
 Variantes disponibles:

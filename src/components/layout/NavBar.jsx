@@ -1,5 +1,5 @@
 import { CartIcon, ProfileIcon } from "../icons";
-import { Logo, Link } from "../ui";
+import { Logo, AppLink } from "../ui";
 
 export function NavBar() {
   return (
@@ -7,28 +7,28 @@ export function NavBar() {
       <Logo />
       <ul className="flex flex-row gap-8">
         <li>
-          <Link href="#">
+          <AppLink to="/explore">
             Explorar
-          </Link>
+          </AppLink>
         </li>
         <li>
-          <Link href="#">
+          <AppLink to="/about">
             Nosotros
-          </Link>
+          </AppLink>
         </li>
         <li>
-          <Link href="#">
+          <AppLink to="/sell">
             Vender
-          </Link>
+          </AppLink>
         </li>
       </ul>
       <div className="flex gap-2">
-        <Link href="#">
+        <AppLink to="/profile">
           <ProfileIcon />
-        </Link>
-        <Link href="#">
+        </AppLink>
+        <AppLink to="/cart">
           <CartIcon />
-        </Link>
+        </AppLink>
       </div>
     </nav>
   );
