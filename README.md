@@ -113,7 +113,7 @@ Componente utilizado para enlaces de navegación o acciones que llevan a otra se
 Recibe el contenido como `children`, lo que permite usar texto solo o texto acompañado de iconos.
 
 ```jsx
-<AppLink href="#">
+<AppLink to="#">
   AppLink
 </AppLink>
 ```
@@ -121,7 +121,7 @@ Recibe el contenido como `children`, lo que permite usar texto solo o texto acom
 Con icono:
 
 ```jsx
-<AppLink variant="underline" href="#">
+<AppLink variant="underline" to="#">
   <span>Ver más</span>
   <RightArrowIcon />
 </AppLink>
