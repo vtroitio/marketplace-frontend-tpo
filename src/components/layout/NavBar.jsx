@@ -3,9 +3,9 @@ import { Logo, AppLink } from "../ui";
 
 export function NavBar() {
   return (
-    <nav className="flex items-center justify-between bg-neutral w-full px-16 h-20 border-b border-seco">
+    <nav className="relative flex h-20 w-full items-center justify-between border-b border-seco bg-neutral px-16">
       <Logo />
-      <ul className="flex flex-row gap-8">
+      <ul className="absolute left-1/2 flex -translate-x-1/2 flex-row gap-8">
         <li>
           <AppLink to="/explore">
             Explorar
