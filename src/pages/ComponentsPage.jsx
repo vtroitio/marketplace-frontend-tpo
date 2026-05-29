@@ -33,16 +33,16 @@ export function ComponentsPage() {
         <div className="flex flex-col gap-4">
           <h3>Links</h3>
           <div className="flex flex-col gap-4">
-            <AppLink href="#">Link</AppLink>
-            <AppLink href="#">
+            <AppLink to="/home">Link</AppLink>
+            <AppLink to="#">
               <span>Link</span>
               <RightArrowIcon />
             </AppLink>
-            <AppLink href="#">
+            <AppLink to="#">
               <LeftArrowIcon />
               <span>Link</span>
             </AppLink>
-            <AppLink variant="underline" href="#">
+            <AppLink variant="underline" to="#">
               Link
             </AppLink>
           </div>

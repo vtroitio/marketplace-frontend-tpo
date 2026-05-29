@@ -42,8 +42,4 @@
   a {
     @apply font-body text-lg uppercase font-bold text-tertiary leading-6 tracking-[1.2px];
   }
-
-  button {
-    @apply cursor-pointer uppercase text-xs font-bold px-8 py-4 leading-3 tracking-[1.2px];
-  }
 }

@@ -1,8 +1,10 @@
+import { Link } from "react-router-dom";
+
 export function Card({
   image,
   title,
   price,
-  href = "#",
+  to = "#",
   variant,
   imageAlt,
   className = "",
@@ -29,7 +31,7 @@ export function Card({
 
   return (
     <article className={`${base} ${styles.card} ${className}`}>
-      <a href={href} className="flex h-full flex-col text-secondary">
+      <Link to={to} className="flex h-full flex-col text-secondary">
         <div
           className={`min-h-0 flex-1 overflow-hidden bg-neutral ${styles.image}`}
         >
@@ -48,9 +50,11 @@ export function Card({
           >
             {title}
           </h3>
-          <p className={`font-normal text-secondary ${styles.price}`}>{price}</p>
+          <p className={`font-normal text-secondary ${styles.price}`}>
+            {price}
+          </p>
         </div>
-      </a>
+      </Link>
     </article>
   );
 }
