@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { MainLayout } from "../components/layout";
+import { Cart } from "../pages/Cart";
 import { ComponentsPage, HomePage, NotFoundPage } from "../pages";
 
 export function AppRoutes() {
@@ -9,6 +10,7 @@ export function AppRoutes() {
 
       <Route element={<MainLayout />}>
         <Route path="/home" element={<HomePage />} />
+        <Route path="/cart" element={<Cart />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
