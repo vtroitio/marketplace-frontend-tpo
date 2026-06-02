@@ -28,28 +28,28 @@ export function Checkout() {
           
           <div>
             <div className="border-b border-gray-200 pb-2 mb-6">
-              <h2>Shipping Details</h2>
+              <h2>Datos de Envío</h2>
             </div>
             <div className="space-y-4">
-              <Input label="FULL NAME" type="text" placeholder="Enter your name" required />
-              <Input label="ADDRESS" type="text" placeholder="Enter your address" required />
+              <Input label="NOMBRE COMPLETO" type="text" placeholder="Enter your name" required />
+              <Input label="DIRECCIÓN" type="text" placeholder="Enter your address" required />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="CITY" type="text" placeholder="City" required />
-                <Input label="ZIP CODE" type="text" placeholder="Zip" required />
+                <Input label="CIUDAD" type="text" placeholder="City" required />
+                <Input label="CÓDIGO POSTAL" type="text" placeholder="Zip" required />
               </div>
             </div>
           </div>
 
           <div>
             <div className="border-b border-gray-200 pb-2 mb-6">
-              <h2>Payment Method</h2>
+              <h2>Método de Pago</h2>
             </div>
             <div className="space-y-4">
-              <Input label="CARD NUMBER" type="text" placeholder="0000 0000 0000 0000" required />
+              <Input label="NÚMERO DE TARJETA" type="text" placeholder="0000 0000 0000 0000" required />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="EXPIRATION" type="text" placeholder="MM/YY" required />
+                <Input label="FECHA DE VENCIMIENTO" type="text" placeholder="MM/YY" required />
                 <Input label="CVV" type="text" placeholder="123" required />
               </div>
             </div>
@@ -60,7 +60,7 @@ export function Checkout() {
         <div className="border border-gray-400 p-8 bg-white min-w-[320px]">
           
           <div className="mb-6">
-            <h2>Order Summary</h2>
+            <h2>Resumen del Pedido</h2>
           </div>
           
           <div className="divide-y divide-gray-200 mb-6">
@@ -94,7 +94,7 @@ export function Checkout() {
                 <strong>${subtotal.toFixed(2)}</strong>
               </div>
               <div className="flex justify-between">
-                <span>Shipping</span>
+                <span>Costo de Envío</span>
                 <strong>${shippingCost.toFixed(2)}</strong>
               </div>
             </div>
