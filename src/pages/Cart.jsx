@@ -67,27 +67,21 @@ export function Cart() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 bg-white text-black font-sans">
+
       <div className="flex justify-between items-baseline border-b border-black pb-3 mb-12">
-        <h1 className="text-4xl font-bold uppercase tracking-tight">
-          Tu Compra
-        </h1>
-        <span className="text-xs uppercase font-bold tracking-wider text-gray-400">
+        <h2>Tu Compra</h2>
+        <div className="text-xs uppercase font-bold tracking-wider text-gray-400">
           {totalArticles} {totalArticles === 1 ? "Artículo" : "Artículos"}
-        </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
+        
         <div className="lg:col-span-2">
           {cartItems.length === 0 ? (
             <div className="text-center py-12 border border-dashed border-gray-300">
-              <p className="text-gray-400 uppercase text-xs tracking-wider">
-                Tu carrito está vacío.
-              </p>
-              <AppLink
-                variant="underline"
-                to="/home"
-                className="text-xs font-bold uppercase mt-4 inline-block"
-              >
+              <p>Tu carrito está vacío.</p>
+              <AppLink variant="underline" to="/home">
                 Volver a la tienda
               </AppLink>
             </div>
@@ -100,24 +94,19 @@ export function Cart() {
                 <div className="flex items-center gap-6">
                   <div className="w-24 h-24 border border-gray-400 p-1 flex-shrink-0 bg-gray-50">
                     <img
-                      src={item.image}
+                      src={item.image || "https://picsum.photos/id/26/50/50"}
                       alt={item.name}
                       className="w-full h-full object-cover grayscale"
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold text-base uppercase tracking-wider">
-                      {item.name}
-                    </h3>
-                    <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">
-                      Talla: {item.size} <span className="mx-2">|</span> Color:{" "}
-                      {item.color}
-                    </p>
+                    <h3>{item.name}</h3>
+                    <p>Talla: {item.size} | Color: {item.color}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-8">
-                  <div className="flex items-center border border-gray-400 text-sm bg-white">
+                  <div className="flex items-center border border-gray-400 bg-white">
                     <button
                       onClick={() => handleDecrease(item.id)}
                       disabled={item.quantity <= 1}
@@ -125,9 +114,9 @@ export function Cart() {
                     >
                       -
                     </button>
-                    <span className="px-4 py-1.5 font-medium border-x border-gray-400 min-w-[32px] text-center select-none">
+                    <div className="px-4 py-1.5 font-medium border-x border-gray-400 min-w-[32px] text-center select-none text-sm">
                       {item.quantity}
-                    </span>
+                    </div>
                     <button
                       onClick={() => handleIncrease(item.id)}
                       className="px-3 py-1.5 hover:bg-gray-100 transition-colors"
@@ -137,9 +126,9 @@ export function Cart() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-base tracking-tight">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </span>
+                    <div className="text-base tracking-tight">
+                      <strong>${(item.price * item.quantity).toFixed(2)}</strong>
+                    </div>
                     <button
                       onClick={() => handleRemove(item.id)}
                       className="text-gray-400 hover:text-red-600 text-lg font-light transition-colors px-1"
@@ -155,32 +144,26 @@ export function Cart() {
 
         {cartItems.length > 0 && (
           <div className="border border-gray-400 p-8 bg-white min-w-[320px]">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-gray-500 border-b border-gray-200 pb-4 mb-6">
-              Resumen de Orden
-            </h2>
+            <div className="border-b border-gray-200 pb-4 mb-6">
+              <h3>Resumen de Orden</h3>
+            </div>
 
             <div className="space-y-4 text-xs uppercase font-medium tracking-wider text-gray-500 mb-8">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span className="font-bold text-black">
-                  ${subtotal.toFixed(2)}
-                </span>
+                <strong className="text-black">${subtotal.toFixed(2)}</strong>
               </div>
-              <div className="flex justify-between border-b border-gray-200 pb-4">
+              <div className="flex justify-between">
                 <span>Envío Estimado</span>
-                <span className="font-bold text-black">
-                  ${shippingCost.toFixed(2)}
-                </span>
+                <strong className="text-black">${shippingCost.toFixed(2)}</strong>
               </div>
             </div>
 
-            <div className="flex justify-between items-baseline mb-8">
-              <span className="text-sm font-bold uppercase tracking-wider">
-                Total
-              </span>
-              <span className="text-2xl font-bold tracking-tight">
-                ${total.toFixed(2)}
-              </span>
+            <div className="flex justify-between items-baseline border-t border-black pt-4 mb-8">
+              <span>Total</span>
+              <div className="text-2xl font-bold tracking-tight text-black">
+                <strong>${total.toFixed(2)}</strong>
+              </div>
             </div>
 
             <div className="flex flex-col gap-4 items-center w-full">
@@ -190,11 +173,7 @@ export function Cart() {
                 </Button>
               </AppLink>
 
-              <AppLink
-                variant="underline"
-                to="/home"
-                className="text-xs font-bold uppercase tracking-widest text-black mt-2 inline-block text-center"
-              >
+              <AppLink variant="underline" to="/home">
                 Continuar Comprando
               </AppLink>
             </div>
