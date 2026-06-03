@@ -1,34 +1,34 @@
 import { CartIcon, ProfileIcon } from "../icons";
-import { Logo, AppLink } from "../ui";
+import { Logo, AppNavLink } from "../ui";
 
 export function NavBar() {
   return (
-    <nav className="relative flex h-20 w-full items-center justify-between border-b border-seco bg-neutral px-16">
+    <nav className="relative flex h-20 w-full items-center justify-between border-b border-secondary bg-neutral px-16">
       <Logo />
-      <ul className="absolute left-1/2 flex -translate-x-1/2 flex-row gap-8">
+      <ul className="flex gap-8">
         <li>
-          <AppLink to="/explore">
+          <AppNavLink to="/explore">
             Explorar
-          </AppLink>
+          </AppNavLink>
         </li>
         <li>
-          <AppLink to="/about">
+          <AppNavLink to="/about">
             Nosotros
-          </AppLink>
+          </AppNavLink>
         </li>
         <li>
-          <AppLink to="/sell">
+          <AppNavLink to="/sell">
             Vender
-          </AppLink>
+          </AppNavLink>
         </li>
       </ul>
       <div className="flex gap-2">
-        <AppLink to="/profile">
+        <AppNavLink to="/profile">
           <ProfileIcon />
-        </AppLink>
-        <AppLink to="/cart">
+        </AppNavLink>
+        <AppNavLink to="/cart">
           <CartIcon />
-        </AppLink>
+        </AppNavLink>
       </div>
     </nav>
   );

@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { MainLayout } from "../components/layout";
 import { Cart } from "../pages/Cart";
 import { Checkout } from "../pages/Checkout";
-import { ComponentsPage, HomePage, NotFoundPage } from "../pages";
+import { ComponentsPage, HomePage, NotFoundPage, AboutPage } from "../pages";
 
 export function AppRoutes() {
   return (
@@ -11,6 +11,7 @@ export function AppRoutes() {
 
       <Route element={<MainLayout />}>
         <Route path="/home" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
       </Route>
