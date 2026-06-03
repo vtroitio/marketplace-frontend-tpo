@@ -7,5 +7,7 @@ export { ChevronDownIcon } from "./ChevronDownIcon";
 export { EyeIcon } from "./EyeIcon";
 export { EyeOffIcon } from "./EyeOffIcon";
 export { CompassIcon } from "./CompassIcon";
-export { CheckIcon } from "./CheckIcon";
 export { DiamondIcon } from "./DiamondIcon";
+export { PerformanceIcon } from "./PerformanceIcon";
+export { MinimalismIcon } from "./MinimalismIcon";
+export { CheckIcon } from "./CheckIcon";
