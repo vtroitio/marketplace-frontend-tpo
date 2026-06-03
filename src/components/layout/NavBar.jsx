@@ -7,19 +7,13 @@ export function NavBar() {
       <Logo />
       <ul className="flex gap-8">
         <li>
-          <AppNavLink to="/explore">
-            Explorar
-          </AppNavLink>
+          <AppNavLink to="/explore">Explorar</AppNavLink>
         </li>
         <li>
-          <AppNavLink to="/about">
-            Nosotros
-          </AppNavLink>
+          <AppNavLink to="/about">Nosotros</AppNavLink>
         </li>
         <li>
-          <AppNavLink to="/sell">
-            Vender
-          </AppNavLink>
+          <AppNavLink to="/sell">Vender</AppNavLink>
         </li>
       </ul>
       <div className="flex gap-2">

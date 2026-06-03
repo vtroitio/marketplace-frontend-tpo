@@ -10,3 +10,4 @@ export { CompassIcon } from "./CompassIcon";
 export { DiamondIcon } from "./DiamondIcon";
 export { PerformanceIcon } from "./PerformanceIcon";
 export { MinimalismIcon } from "./MinimalismIcon";
+export { CheckIcon } from "./CheckIcon";

@@ -44,8 +44,8 @@ export function AboutPage() {
       <div className="pt-32">
         <h3 className="mb-16 text-center">PILARES</h3>
         <div className="flex justify-center gap-4">
-          <div className="w-1/3 flex flex-col items-center justify-center gap-4 border border-secondary p-16">
-            <DiamondIcon className="text-primary" />
+          <div className="w-1/3 flex flex-col items-center justify-start gap-4 border border-secondary p-16">
+            <DiamondIcon size={40} className="text-primary" />
             <p>
               <b>EDICIONES ESPECIALES</b>
             </p>
@@ -53,8 +53,8 @@ export function AboutPage() {
               Enfoque en la escasez y el valor del diseño digital
             </p>
           </div>
-          <div className="w-1/3 flex flex-col items-center justify-center gap-4 border border-secondary p-16">
-            <PerformanceIcon className="text-primary" />
+          <div className="w-1/3 flex flex-col items-center justify-start gap-4 border border-secondary p-16">
+            <PerformanceIcon size={40} className="text-primary" />
             <p>
               <b>RENDIMIENTO EXTREMO</b>
             </p>
@@ -63,8 +63,8 @@ export function AboutPage() {
               reflejando la eficiencia del código limpio.
             </p>
           </div>
-          <div className="w-1/3 flex flex-col items-center justify-center gap-4 border border-secondary p-16">
-            <MinimalismIcon className="text-primary" />
+          <div className="w-1/3 flex flex-col items-center justify-start gap-4 border border-secondary p-16">
+            <MinimalismIcon size={40} className="text-primary" />
             <p>
               <b>MINIMALISMO FUNCIONAL</b>
             </p>
