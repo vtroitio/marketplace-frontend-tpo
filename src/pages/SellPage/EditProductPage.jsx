@@ -13,7 +13,6 @@ export function EditProductPage() {
 
   const handleUpdateProduct = (updatedProduct) => {
     console.log("Producto actualizado:", updatedProduct);
-    alert("Producto actualizado.");
   };
 
   if (!product) {
@@ -23,7 +22,7 @@ export function EditProductPage() {
           <h1 className="font-logo uppercase text-8xl text-center">
             Producto no encontrado
           </h1>
-          <AppLink to="/home">
+          <AppLink to="/">
             <LeftArrowIcon />
             <span>Volver a la página de inicio</span>
           </AppLink>

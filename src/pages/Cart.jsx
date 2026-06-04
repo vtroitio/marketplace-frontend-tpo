@@ -81,7 +81,7 @@ export function Cart() {
           {cartItems.length === 0 ? (
             <div className="text-center py-12 border border-dashed border-gray-300">
               <p>Tu carrito está vacío.</p>
-              <AppLink variant="underline" to="/home">
+              <AppLink variant="underline" to="/explore">
                 Volver a la tienda
               </AppLink>
             </div>
@@ -173,7 +173,7 @@ export function Cart() {
                 </Button>
               </AppLink>
 
-              <AppLink variant="underline" to="/home">
+              <AppLink variant="underline" to="/explore">
                 Continuar Comprando
               </AppLink>
             </div>

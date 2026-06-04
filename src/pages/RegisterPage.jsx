@@ -1,3 +1,4 @@
+import { LeftArrowIcon } from "../components/icons";
 import { AppLink, Button, Input } from "../components/ui";
 
 export function RegisterPage() {
@@ -9,8 +10,9 @@ export function RegisterPage() {
         <div className="flex items-center justify-center px-8 py-20 sm:px-16">
           <div className="w-full max-w-[560px] space-y-10">
             <div className="space-y-4">
-              <AppLink to="/home" variant="text">
-                ← Volver al inicio
+              <AppLink to="/" variant="text">
+                <LeftArrowIcon />
+                <span>Volver al inicio</span>
               </AppLink>
               <div className="space-y-3">
                 <h1>Crear Cuenta</h1>
@@ -27,8 +29,16 @@ export function RegisterPage() {
               </div>
 
               <Input label="Usuario" type="text" placeholder="juandoe01" />
-              <Input label="Email" type="email" placeholder="juandoc@ejemplo.com" />
-              <Input label="Contraseña" type="password" placeholder="Mínimo 8 caracteres" />
+              <Input
+                label="Email"
+                type="email"
+                placeholder="juandoc@ejemplo.com"
+              />
+              <Input
+                label="Contraseña"
+                type="password"
+                placeholder="Mínimo 8 caracteres"
+              />
               <Input
                 label="Repetir Contraseña"
                 type="password"
@@ -41,7 +51,8 @@ export function RegisterPage() {
             </form>
 
             <div className="text-center text-xs uppercase tracking-[1.2px] text-secondary">
-              ¿Ya eres miembro? <AppLink variant="underline" to="/login">
+              ¿Ya eres miembro?{" "}
+              <AppLink variant="underline" to="/login">
                 Inicia sesión
               </AppLink>
             </div>

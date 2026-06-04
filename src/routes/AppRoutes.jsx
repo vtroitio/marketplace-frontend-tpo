@@ -10,6 +10,9 @@ import {
   NotFoundPage,
   SellPage,
   AboutPage,
+  ProfilePage,
+  ExplorePage,
+  ProductDetailPage,
   CreateProductPage,
   EditProductPage,
 } from "../pages";
@@ -17,18 +20,20 @@ import {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<ComponentsPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
       <Route element={<MainLayout />}>
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/sell" element={<SellPage />} />
         <Route path="/sell/new" element={<CreateProductPage />} />
         <Route path="/sell/edit/:productId" element={<EditProductPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/explore/:productId" element={<ProductDetailPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

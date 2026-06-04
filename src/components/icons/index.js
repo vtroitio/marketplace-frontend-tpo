@@ -16,3 +16,5 @@ export { ResumeIcon } from "./ResumeIcon";
 export { TrashIcon } from "./TrashIcon";
 export { PencilIcon } from "./PencilIcon";
 export { SearchIcon } from "./SearchIcon";
+export { CouponIcon } from "./CouponIcon";
+export { StarIcon } from "./StarIcon";

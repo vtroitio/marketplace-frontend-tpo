@@ -3,16 +3,31 @@ import { Button } from "../ui";
 import { ProductBasicInfo } from "./ProductBasicInfo";
 import { ProductVariants } from "./ProductVariants";
 
-const emptyVariant = {
+const createEmptyVariant = () => ({
   color: "",
   size: "",
   stock: "",
   price: "",
   images: [],
-}
+});
 
-export function ProductForm({ data = [], onSubmit, submitLabel }) {
-  const [product, setProduct] = useState(data);
+const createEmptyProduct = () => ({
+  name: "",
+  price: "",
+  stock: "",
+  isActive: true,
+  image: null,
+  variants: [createEmptyVariant()],
+});
+
+export function ProductForm({ data, onSubmit, submitLabel }) {
+  const [product, setProduct] = useState(() => ({
+    ...createEmptyProduct(),
+    ...data,
+    variants: Array.isArray(data?.variants)
+      ? data.variants
+      : [createEmptyVariant()],
+  }));
 
   const addVariant = () => {
     setProduct((prev) => ({

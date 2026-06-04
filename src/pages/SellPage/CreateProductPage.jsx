@@ -4,7 +4,6 @@ import { AppLink } from "../../components/ui";
 
 const handleUpdateProduct = (updatedProduct) => {
   console.log("Producto creado:", updatedProduct);
-  alert("Producto creado.");
 };
 
 export function CreateProductPage() {
@@ -18,7 +17,7 @@ export function CreateProductPage() {
         <h2 className="uppercase">Publicar Nueva Prenda</h2>
       </div>
       <ProductForm
-        data={[]}
+        data={{}}
         onSubmit={handleUpdateProduct}
         submitLabel="Publicar Prenda"
       />

@@ -7,3 +7,6 @@ export { AboutPage } from "./AboutPage";
 export { SellPage } from "./SellPage/SellPage";
 export { CreateProductPage } from "./SellPage/CreateProductPage";
 export { EditProductPage } from "./SellPage/EditProductPage";
+export { ProfilePage } from "./ProfilePage";
+export { ExplorePage } from "./ExplorePage";
+export { ProductDetailPage } from "./ProductDetailPage";

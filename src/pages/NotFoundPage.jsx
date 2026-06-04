@@ -7,7 +7,7 @@ export function NotFoundPage() {
       <h1 className="font-logo uppercase text-8xl text-center">
         404 - Página no encontrada
       </h1>
-      <AppLink to="/home">
+      <AppLink to="/">
         <LeftArrowIcon />
         <span>Volver a la página de inicio</span>
       </AppLink>
