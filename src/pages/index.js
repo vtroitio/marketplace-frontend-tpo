@@ -6,3 +6,4 @@ export { NotFoundPage } from "./NotFoundPage";
 export { AboutPage } from "./AboutPage";
 export { SellerPage } from "./SellerPage";
 export { ProfilePage } from "./ProfilePage";
+export { ExplorePage } from "./ExplorePage";
