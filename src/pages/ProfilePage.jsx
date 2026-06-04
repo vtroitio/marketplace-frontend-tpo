@@ -11,6 +11,8 @@ export function ProfilePage() {
     email: "juandoe@ejemplo.com",
   });
 
+  const [savedData, setSavedData] = useState({ ...formData });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -18,6 +20,7 @@ export function ProfilePage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setSavedData({ ...formData });
     console.log("Datos guardados:", formData);
   };
 
@@ -25,17 +28,15 @@ export function ProfilePage() {
     <div className="min-h-screen bg-neutral">
       <div className="mx-auto max-w-3xl px-8 py-12">
 
-        {/* Avatar + Nombre */}
         <div className="flex items-center gap-4 mb-8">
           <div className="border border-secondary p-3">
             <ProfileIcon size={32} />
           </div>
-          <h2>{formData.nombre} {formData.apellido}</h2>
+          <h2>{savedData.nombre} {savedData.apellido}</h2>
         </div>
 
         <hr className="border-secondary/20 mb-10" />
 
-        {/* Gestión de datos */}
         <section className="mb-12">
           <div className="mb-8">
             <h3>Gestión de datos</h3>
@@ -87,7 +88,6 @@ export function ProfilePage() {
 
         <hr className="border-secondary/20 mb-10" />
 
-        {/* Seguridad */}
         <section>
           <div className="mb-8">
             <h3>Seguridad</h3>

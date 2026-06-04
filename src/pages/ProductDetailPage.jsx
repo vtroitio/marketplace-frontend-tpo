@@ -19,7 +19,7 @@ const product = {
   images: [mainImage, zoomImage, backImage],
   rating: 4.8,
   reviewCount: 12,
-  reviews: [  
+  reviews: [
     {
       id: 1,
       author: "Hiroshi T.",
@@ -50,7 +50,6 @@ export function ProductDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
 
-          {/* Galería */}
           <div className="space-y-4">
             <div className="border border-secondary overflow-hidden aspect-square">
               <img
@@ -75,7 +74,6 @@ export function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Info */}
           <div className="space-y-6">
             <div>
               <h1>{product.name}</h1>
@@ -88,7 +86,6 @@ export function ProductDetailPage() {
 
             <p>{product.description}</p>
 
-            {/* Color */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="text-sm font-bold uppercase tracking-[1.2px]">Color</div>
@@ -111,7 +108,6 @@ export function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Talla */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-bold uppercase tracking-[1.2px]">Talla</div>
@@ -144,7 +140,6 @@ export function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Reseñas */}
         <div className="mt-20">
           <hr className="border-secondary/20 mb-10" />
 
