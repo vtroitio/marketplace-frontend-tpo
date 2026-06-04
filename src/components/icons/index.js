@@ -11,3 +11,8 @@ export { DiamondIcon } from "./DiamondIcon";
 export { PerformanceIcon } from "./PerformanceIcon";
 export { MinimalismIcon } from "./MinimalismIcon";
 export { CheckIcon } from "./CheckIcon";
+export { PauseIcon } from "./PauseIcon";
+export { ResumeIcon } from "./ResumeIcon";
+export { TrashIcon } from "./TrashIcon";
+export { PencilIcon } from "./PencilIcon";
+export { SearchIcon } from "./SearchIcon";

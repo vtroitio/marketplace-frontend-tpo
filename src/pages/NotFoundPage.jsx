@@ -3,7 +3,7 @@ import { AppLink } from "../components/ui";
 
 export function NotFoundPage() {
   return (
-    <div className="min-h-screen container mx-auto gap-8 flex flex-col items-center justify-center">
+    <div className="w-full min-h-screen grow flex flex-col items-center justify-center gap-8">
       <h1 className="font-logo uppercase text-8xl text-center">
         404 - Página no encontrada
       </h1>
