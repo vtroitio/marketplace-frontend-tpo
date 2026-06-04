@@ -9,6 +9,15 @@ export const sellerProducts = [
     stock: 50,
     isActive: true,
     image: tshirtImage,
+    variants: [
+      {
+        id: 1,
+        color: "red",
+        size: "S",
+        stock: 50,
+        price: 19.99,
+      },
+    ],
   },
   {
     id: 2,
@@ -17,5 +26,14 @@ export const sellerProducts = [
     stock: 30,
     isActive: false,
     image: hoodieImage,
+    variants: [
+      {
+        id: 1,
+        color: "blue",
+        size: "M",
+        stock: 30,
+        price: 39.99,
+      },
+    ],
   },
 ];

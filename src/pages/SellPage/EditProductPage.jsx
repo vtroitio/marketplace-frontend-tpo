@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { sellerProducts } from "../../data/sellerProdcuts";
 import { AppLink } from "../../components/ui";
 import { LeftArrowIcon } from "../../components/icons";
+import { ProductForm } from "../../components/products";
 
 export function EditProductPage() {
   const { productId } = useParams();
@@ -9,6 +10,11 @@ export function EditProductPage() {
   const product = sellerProducts.find(
     (product) => product.id === Number(productId),
   );
+
+  const handleUpdateProduct = (updatedProduct) => {
+    console.log("Producto actualizado:", updatedProduct);
+    alert("Producto actualizado.");
+  };
 
   if (!product) {
     return (
@@ -28,9 +34,18 @@ export function EditProductPage() {
 
   return (
     <section className="container mx-auto py-32 ">
+      <AppLink to="/sell?role=seller">
+        <LeftArrowIcon />
+        <span>Volver</span>
+      </AppLink>
       <div className="border-b border-secondary pb-4">
-        <h1>{product.name}</h1>
+        <h2>Editar Prenda</h2>
       </div>
+      <ProductForm
+        data={product}
+        onSubmit={handleUpdateProduct}
+        submitLabel="Actualizar Prenda"
+      />
     </section>
   );
 }

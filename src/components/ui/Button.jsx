@@ -6,6 +6,7 @@ export function Button({ children, variant, fullWidth, className, ...props }) {
       "bg-primary border border-primary text-neutral hover:bg-transparent hover:text-primary hover:border-primary",
     inverted:
       "bg-transparent border border-primary text-primary hover:bg-primary hover:text-neutral",
+    selection: "bg-transparent border border-secondary text-secondary hover:ring-2",
     outline:
       "bg-transparent border border-secondary text-secondary hover:bg-transparent hover:text-primary hover:border-primary",
     text: "bg-transparent text-primary p-4 hover:font-black",

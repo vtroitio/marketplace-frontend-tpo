@@ -26,7 +26,7 @@ export function SellerView() {
   return (
     <div className="container mx-auto py-32">
       <div className="flex flex-col gap-4 border-b border-secondary pb-8">
-        <h1>Inventario</h1>
+        <h1>GESTIÓN DE INVENTARIO</h1>
         <div className="flex items-end justify-between">
           <p className="w-2/3">
             Gestión centralizada de tu inventario de prendas. Publica, edita,
