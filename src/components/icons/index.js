@@ -12,3 +12,5 @@ export { PerformanceIcon } from "./PerformanceIcon";
 export { MinimalismIcon } from "./MinimalismIcon";
 export { CheckIcon } from "./CheckIcon";
 export { CouponIcon } from "./CouponIcon";
+export { SearchIcon } from "./SearchIcon";
+export { StarIcon } from "./StarIcon";

@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { Card, Button } from "../components/ui";
+import { SearchIcon } from "../components/icons";
 import hoodieImage from "../assets/product-hoodie.png";
 import tshirtImage from "../assets/product-tshirt.png";
 
 const allProducts = [
-  { id: 1, title: 'Hoodie Type-01 "Ghost"', price: "$120.00", image: hoodieImage, category: "Hoodies", sizes: ["S", "M", "L", "XL"] },
-  { id: 2, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Camisetas", sizes: ["S", "M", "L"] },
-  { id: 3, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Camisetas", sizes: ["M", "L", "XL"] },
-  { id: 4, title: 'Hoodie Type-01 "Ghost"', price: "$120.00", image: hoodieImage, category: "Hoodies", sizes: ["S", "L"] },
-  { id: 5, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Camisetas", sizes: ["S", "M"] },
-  { id: 6, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Camisetas", sizes: ["XL"] },
-  { id: 7, title: 'Hoodie Type-01 "Ghost"', price: "$120.00", image: hoodieImage, category: "Hoodies", sizes: ["S", "M", "L", "XL"] },
-  { id: 8, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Accesorios", sizes: ["S", "M"] },
-  { id: 9, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Accesorios", sizes: ["L", "XL"] },
+  { id: 1, title: 'Hoodie Type-01 "Ghost"', price: "$120.00", image: hoodieImage, category: "Hoodies", sizes: ["S", "M", "L", "XL"], colors: ["#000000"] },
+  { id: 2, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Camisetas", sizes: ["S", "M", "L"], colors: ["#000000", "#e60012"] },
+  { id: 3, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Camisetas", sizes: ["M", "L", "XL"], colors: ["#e5a100"] },
+  { id: 4, title: 'Hoodie Type-01 "Ghost"', price: "$120.00", image: hoodieImage, category: "Hoodies", sizes: ["S", "L"], colors: ["#000000", "#3b82f6"] },
+  { id: 5, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Camisetas", sizes: ["S", "M"], colors: ["#22c55e"] },
+  { id: 6, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Camisetas", sizes: ["XL"], colors: ["#ffffff"] },
+  { id: 7, title: 'Hoodie Type-01 "Ghost"', price: "$120.00", image: hoodieImage, category: "Hoodies", sizes: ["S", "M", "L", "XL"], colors: ["#000000", "#e60012"] },
+  { id: 8, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Accesorios", sizes: ["S", "M"], colors: ["#3b82f6"] },
+  { id: 9, title: "T-Shirt Unit-02", price: "$45.00", image: tshirtImage, category: "Accesorios", sizes: ["L", "XL"], colors: ["#e5a100", "#22c55e"] },
 ];
 
 const CATEGORIES = ["Camisetas", "Hoodies", "Accesorios"];
@@ -23,6 +24,7 @@ export function ExplorePage() {
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
+  const [selectedColors, setSelectedColors] = useState([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
@@ -30,6 +32,7 @@ export function ExplorePage() {
     search: "",
     categories: [],
     sizes: [],
+    colors: [],
     minPrice: "",
     maxPrice: "",
   });
@@ -46,11 +49,18 @@ export function ExplorePage() {
     );
   };
 
+  const toggleColor = (color) => {
+    setSelectedColors((prev) =>
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+    );
+  };
+
   const handleFilter = () => {
     setAppliedFilters({
       search,
       categories: selectedCategories,
       sizes: selectedSizes,
+      colors: selectedColors,
       minPrice,
       maxPrice,
     });
@@ -60,10 +70,11 @@ export function ExplorePage() {
     const matchSearch = p.title.toLowerCase().includes(appliedFilters.search.toLowerCase());
     const matchCategory = appliedFilters.categories.length === 0 || appliedFilters.categories.includes(p.category);
     const matchSize = appliedFilters.sizes.length === 0 || p.sizes.some((s) => appliedFilters.sizes.includes(s));
+    const matchColor = appliedFilters.colors.length === 0 || p.colors.some((c) => appliedFilters.colors.includes(c));
     const price = parseFloat(p.price.replace("$", ""));
     const matchMin = appliedFilters.minPrice === "" || price >= parseFloat(appliedFilters.minPrice);
     const matchMax = appliedFilters.maxPrice === "" || price <= parseFloat(appliedFilters.maxPrice);
-    return matchSearch && matchCategory && matchSize && matchMin && matchMax;
+    return matchSearch && matchCategory && matchSize && matchColor && matchMin && matchMax;
   });
 
   return (
@@ -72,6 +83,7 @@ export function ExplorePage() {
 
         {/* Buscador */}
         <div className="mb-8 border border-secondary flex items-center px-4 gap-3">
+          <SearchIcon size={20} className="text-tertiary flex-shrink-0" />
           <input
             className="w-full py-4 bg-transparent text-lg focus:outline-none placeholder:text-tertiary"
             placeholder="Buscar Prendas..."
@@ -138,7 +150,12 @@ export function ExplorePage() {
                 {COLORS.map((color) => (
                   <button
                     key={color}
-                    className="w-6 h-6 border border-secondary"
+                    onClick={() => toggleColor(color)}
+                    className={`w-6 h-6 border-2 transition-all ${
+                      selectedColors.includes(color)
+                        ? "border-primary scale-110"
+                        : "border-secondary"
+                    }`}
                     style={{ backgroundColor: color }}
                   />
                 ))}
@@ -183,7 +200,7 @@ export function ExplorePage() {
                   image={product.image}
                   title={product.title}
                   price={product.price}
-                  to={`/product/${product.id}`}
+                  to={`/explore/${product.id}`}
                   className="max-w-none"
                 />
               ))

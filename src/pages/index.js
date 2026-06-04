@@ -7,3 +7,4 @@ export { AboutPage } from "./AboutPage";
 export { SellerPage } from "./SellerPage";
 export { ProfilePage } from "./ProfilePage";
 export { ExplorePage } from "./ExplorePage";
+export { ProductDetailPage } from "./ProductDetailPage";
