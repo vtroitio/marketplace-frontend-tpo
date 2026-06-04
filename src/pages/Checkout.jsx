@@ -20,7 +20,7 @@ export function Checkout() {
     <div className="max-w-7xl mx-auto px-4 py-12 bg-white text-black font-sans">
       
       <div className="border-b border-black pb-3 mb-12">
-        <h1>Checkout</h1>
+        <h2>ORDEN DE COMPRA</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
@@ -29,7 +29,7 @@ export function Checkout() {
           
           <div>
             <div className="border-b border-gray-200 pb-2 mb-6">
-              <h2>Datos de Envío</h2>
+              <h3>Datos de Envío</h3>
             </div>
             <div className="space-y-4">
               <Input label="Nombre completo" type="text" placeholder="Ingresá tu nombre" required />
@@ -43,7 +43,7 @@ export function Checkout() {
 
           <div>
             <div className="border-b border-gray-200 pb-2 mb-6">
-              <h2>Método de Pago</h2>
+              <h3>Método de Pago</h3>
             </div>
             <div className="space-y-4">
               <Input label="Número de tarjeta" type="text" placeholder="0000 0000 0000 0000" required />
@@ -59,7 +59,7 @@ export function Checkout() {
         <div className="border border-gray-400 p-8 bg-white min-w-[320px]">
           
           <div className="mb-6">
-            <h2>Resumen del Pedido</h2>
+            <h3>Resumen del Pedido</h3>
           </div>
           
           <div className="divide-y divide-gray-200 mb-6">

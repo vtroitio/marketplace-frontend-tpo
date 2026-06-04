@@ -35,6 +35,10 @@
     @apply font-body text-4xl uppercase font-bold leading-9;
   }
 
+  h4 {
+    @apply font-body text-2xl uppercase font-bold leading-7;
+  }
+
   p {
     @apply font-body text-lg font-normal leading-6;
   }

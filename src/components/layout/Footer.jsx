@@ -19,7 +19,7 @@ export function Footer() {
 
           <nav className="flex flex-col gap-4">
             <AppLink to="/about">Nosotros</AppLink>
-            <AppLink to="/sell">Vender</AppLink>
+            <AppLink to="/sell">Venta</AppLink>
           </nav>
         </div>
 

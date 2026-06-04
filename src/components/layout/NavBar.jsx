@@ -13,7 +13,7 @@ export function NavBar() {
           <AppNavLink to="/about">Nosotros</AppNavLink>
         </li>
         <li>
-          <AppNavLink to="/sell">Vender</AppNavLink>
+          <AppNavLink to="/sell">Venta</AppNavLink>
         </li>
       </ul>
       <div className="flex gap-2">
