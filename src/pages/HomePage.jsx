@@ -6,16 +6,19 @@ import tshirtImage from "../assets/product-tshirt.png";
 
 const featuredProducts = [
   {
+    id: 1,
     title: 'Hoodie Type-01 "Ghost"',
     price: "$120.00",
     image: hoodieImage,
   },
   {
+    id: 2,
     title: "T-Shirt Unit-02",
     price: "$45.00",
     image: tshirtImage,
   },
   {
+    id: 3,
     title: "T-Shirt Unit-02",
     price: "$45.00",
     image: tshirtImage,
@@ -68,17 +71,19 @@ export function HomePage() {
             image={featuredProducts[0].image}
             title={featuredProducts[0].title}
             price={featuredProducts[0].price}
+            to={`/explore/${featuredProducts[0].id}`}
           />
 
           <div className="grid gap-6 md:h-full md:grid-rows-2">
-            {featuredProducts.slice(1).map((product, index) => (
+            {featuredProducts.slice(1).map((product) => (
               <Card
-                key={`${product.title}-${index}`}
+                key={product.id}
                 variant="small"
                 className="md:h-full md:max-w-none"
                 image={product.image}
                 title={product.title}
                 price={product.price}
+                to={`/explore/${product.id}`}
               />
             ))}
           </div>
