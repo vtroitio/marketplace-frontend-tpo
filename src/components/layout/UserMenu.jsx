@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthenticated } from "../../helpers/authStorage";
 import { Button } from "../ui";
 import { ProfileIcon } from "../icons";
@@ -7,6 +7,8 @@ import { logout } from "../../api/auth";
 
 export function UserMenu() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const menuRef = useRef(null);
   const [open, setOpen] = useState(false);
 
@@ -50,18 +52,22 @@ export function UserMenu() {
   }, [open]);
 
   return (
-    <div ref={menuRef} className="relative">
+    <div
+      ref={menuRef}
+      className={`relative ${location.pathname === "/profile" && "border-b-2 border-primary"}`}
+    >
       <button
         type="button"
-        className="cursor-pointer"
+        className={`cursor-pointer size-6`}
         onClick={toggleMenu}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Abrir menú de usuario"
       >
-        <ProfileIcon className="text-tertiary" />
+        <ProfileIcon
+          className={`${location.pathname === "/profile" ? "text-primary" : "text-tertiary"}`}
+        />
       </button>
-
       {open && (
         <div
           className="absolute right-0 top-full z-50 mt-2 min-w-64 border border-secondary bg-neutral p-2"
