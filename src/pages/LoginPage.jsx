@@ -1,6 +1,48 @@
+import { useState } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { login } from "../api/auth";
+import { saveAccessToken, isAuthenticated } from "../helpers/authStorage";
 import { AppLink, Button, Input } from "../components/ui";
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from
+    ? location.state.from.pathname + location.state.from.search
+    : "/";
+
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  if (isAuthenticated()) {
+    return <Navigate to={from} replace />;
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await login(form);
+
+      saveAccessToken(data.accessToken);
+
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err?.message || "Error al iniciar sesión");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neutral flex items-center justify-center px-4 py-12">
       <div className="grid w-full max-w-full grid-cols-1 overflow-hidden rounded-[32px] border border-secondary bg-white text-black shadow-sm lg:w-[1280px] lg:h-[1105px] lg:grid-cols-[640px_640px]">
@@ -17,27 +59,34 @@ export function LoginPage() {
               </div>
             </div>
 
-            <form className="space-y-6 max-w-[436px]">
+            <form className="space-y-6 max-w-[436px]" onSubmit={handleSubmit}>
               <Input
                 label="Email"
                 type="email"
                 placeholder="juandoc@ejemplo.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
               />
 
               <Input
                 label="Contraseña"
                 type="password"
                 placeholder="Mínimo 8 caracteres"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
               />
 
-              <Button fullWidth>
-                Iniciar sesión
+              <Button fullWidth type="submit" disabled={loading}>
+                {loading ? "Iniciando sesión..." : "Iniciar sesión"}
               </Button>
-         
+              <p className="min-h-6 text-primary text-center">{error}</p>
             </form>
             <div className="text-center text-xs uppercase tracking-[1.2px] text-secondary">
               <p>
-                ¿No tienes cuenta? <AppLink variant="underline" to="/register">
+                ¿No tienes cuenta?{" "}
+                <AppLink variant="underline" to="/register">
                   CREA UNA
                 </AppLink>
               </p>

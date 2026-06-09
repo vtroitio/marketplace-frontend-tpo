@@ -1,9 +1,9 @@
+import { ProtectedRoute } from "./ProtectedRoute";
 import { Routes, Route } from "react-router-dom";
 import { MainLayout } from "../components/layout";
 import { Cart } from "../pages/Cart";
 import { Checkout } from "../pages/Checkout";
 import {
-  ComponentsPage,
   HomePage,
   LoginPage,
   RegisterPage,
@@ -31,7 +31,14 @@ export function AppRoutes() {
         <Route path="/sell" element={<SellPage />} />
         <Route path="/sell/new" element={<CreateProductPage />} />
         <Route path="/sell/edit/:productId" element={<EditProductPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/explore/:productId" element={<ProductDetailPage />} />
       </Route>
