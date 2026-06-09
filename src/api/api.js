@@ -1,32 +1,6 @@
+import { getAccessToken, saveAccessToken, clearSession } from "../helpers/authStorage";
+
 const API_URL = import.meta.env.VITE_API_URL;
-
-/**
- * Obtiene el access token guardado en localStorage.
- *
- * @returns {string | null} Token de acceso o null si no existe.
- */
-function getAccessToken() {
-  return localStorage.getItem("accessToken");
-}
-
-/**
- * Guarda el access token en localStorage.
- *
- * @param {string} accessToken Token de acceso.
- * @returns {void}
- */
-function saveAccessToken(accessToken) {
-  localStorage.setItem("accessToken", accessToken);
-}
-
-/**
- * Elimina el access token de la sesión local.
- *
- * @returns {void}
- */
-function clearSession() {
-  localStorage.removeItem("accessToken");
-}
 
 /**
  * Renueva el access token usando la cookie de refresh.
