@@ -3,10 +3,10 @@ import { getAccessToken, saveAccessToken, clearSession } from "../helpers/authSt
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
- * Renueva el access token usando la cookie de refresh.
+ * Refreshes the access token by making a request to the backend. If successful, it saves the new token and returns it.
  *
- * @returns {Promise<string>} Nuevo access token.
- * @throws {Error} Si no se pudo renovar la sesión.
+ * @returns {Promise<string>} The new access token.
+ * @throws {Error} I
  */
 async function refreshAccessToken() {
   const response = await fetch(`${API_URL}/auth/refresh`, {

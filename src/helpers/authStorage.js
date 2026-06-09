@@ -8,6 +8,15 @@ export function getAccessToken() {
 }
 
 /**
+ * Checks if the user is currently authenticated by verifying the presence of an access token in localStorage.
+ *
+ * @returns {boolean} True if the user is authenticated, false otherwise.
+ */
+export function isAuthenticated() {
+  return !!localStorage.getItem("accessToken");
+}
+
+/**
  * Saves the access token to localStorage for future authenticated requests.
  *
  * @param {string} accessToken

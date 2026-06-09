@@ -1,4 +1,5 @@
-import { CartIcon, ProfileIcon } from "../icons";
+import { CartIcon } from "../icons";
+import { UserMenu } from "./UserMenu";
 import { Logo, AppNavLink } from "../ui";
 
 export function NavBar() {
@@ -17,9 +18,7 @@ export function NavBar() {
         </li>
       </ul>
       <div className="flex gap-2">
-        <AppNavLink to="/profile">
-          <ProfileIcon />
-        </AppNavLink>
+        <UserMenu />
         <AppNavLink to="/cart">
           <CartIcon />
         </AppNavLink>
