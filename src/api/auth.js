@@ -28,7 +28,7 @@ export function register(userData) {
  * @param {string} credentials.password - The user's password.
  * @returns {Promise<{ accessToken: string }>} The response from the backend.
  */
-export function login(credentials) {
+export async function login(credentials) {
   return request("/auth/login", {
     method: "POST",
     body: credentials,

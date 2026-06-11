@@ -1,8 +1,10 @@
+import { RoleProtectedRoute } from "./RoleProtectedRoute";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Routes, Route } from "react-router-dom";
 import { MainLayout } from "../components/layout";
 import { Cart } from "../pages/Cart";
 import { Checkout } from "../pages/Checkout";
+import { ROLES } from "../helpers/roles";
 import {
   HomePage,
   LoginPage,
@@ -29,8 +31,26 @@ export function AppRoutes() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/sell" element={<SellPage />} />
-        <Route path="/sell/new" element={<CreateProductPage />} />
-        <Route path="/sell/edit/:productId" element={<EditProductPage />} />
+        <Route
+          path="/sell/new"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[ROLES.SELLER, ROLES.ADMIN, ROLES.SUPER_ADMIN]}
+            >
+              <CreateProductPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/sell/edit/:productId"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[ROLES.SELLER, ROLES.ADMIN, ROLES.SUPER_ADMIN]}
+            >
+              <EditProductPage />
+            </RoleProtectedRoute>
+          }
+        />
         <Route
           path="/profile"
           element={

@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
-import { saveAccessToken, isAuthenticated } from "../helpers/authStorage";
+import { getProfile } from "../api/users";
+import {
+  saveAccessToken,
+  saveUserRole,
+  isAuthenticated,
+} from "../helpers/authStorage";
 import { AppLink, Button, Input } from "../components/ui";
 
 export function LoginPage() {
@@ -32,8 +37,10 @@ export function LoginPage() {
       setError(null);
 
       const data = await login(form);
-
       saveAccessToken(data.accessToken);
+
+      const user = await getProfile();
+      saveUserRole(user.role.code);
 
       navigate(from, { replace: true });
     } catch (err) {
