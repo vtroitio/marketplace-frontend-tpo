@@ -3,98 +3,104 @@ import { Button } from "../ui";
 import { ProductBasicInfo } from "./ProductBasicInfo";
 import { ProductVariants } from "./ProductVariants";
 
-const createEmptyVariant = () => ({
-  color: "",
-  size: "",
-  stock: "",
-  price: "",
+const createEmptyVariantGroup = () => ({
+  colorAttributeValueId: null,
+  colorCode: "",
+  colorValue: "",
+  hexColor: null,
   images: [],
+  sizes: [],
 });
 
 const createEmptyProduct = () => ({
   name: "",
+  description: "",
+  coverImagePath: "",
   price: "",
-  stock: "",
+  totalStock: 0,
   isActive: true,
-  image: null,
-  variants: [createEmptyVariant()],
+  selectedGender: null,
+  selectedType: null,
+  variantGroups: [createEmptyVariantGroup()],
 });
 
 export function ProductForm({ data, onSubmit, submitLabel }) {
   const [product, setProduct] = useState(() => ({
     ...createEmptyProduct(),
     ...data,
-    variants: Array.isArray(data?.variants)
-      ? data.variants
-      : [createEmptyVariant()],
+    variantGroups:
+      Array.isArray(data?.variantGroups) && data.variantGroups.length > 0
+        ? data.variantGroups
+        : [createEmptyVariantGroup()],
   }));
 
-  const addVariant = () => {
+  function addVariantGroup() {
     setProduct((prev) => ({
       ...prev,
-      variants: [
-        ...prev.variants,
-        {
-          color: "",
-          size: "",
-          stock: "",
-          price: "",
-          images: [],
-        },
-      ],
+      variantGroups: [...(prev.variantGroups ?? []), createEmptyVariantGroup()],
     }));
-  };
+  }
 
-  const updateField = (field, value) => {
+  function updateField(field, value) {
     setProduct((prev) => ({
       ...prev,
       [field]: value,
     }));
-  };
+  }
 
-  const updateVariant = (index, field, value) => {
+  function updateVariantGroup(index, field, value) {
     setProduct((prev) => {
-      const variants = [...prev.variants];
+      const variantGroups = [...(prev.variantGroups ?? [])];
 
-      variants[index] = {
-        ...variants[index],
-        [field]: value,
-      };
+      if (field === "color") {
+        variantGroups[index] = {
+          ...variantGroups[index],
+          ...value,
+        };
+      } else {
+        variantGroups[index] = {
+          ...variantGroups[index],
+          [field]: value,
+        };
+      }
 
       return {
         ...prev,
-        variants,
+        variantGroups,
       };
     });
-  };
+  }
 
-  const removeVariant = (index) => {
+  function removeVariantGroup(index) {
     setProduct((prev) => {
-      if (prev.variants.length <= 1) {
+      const variantGroups = prev.variantGroups ?? [];
+
+      if (variantGroups.length <= 1) {
         return prev;
       }
 
       return {
         ...prev,
-        variants: prev.variants.filter((_, i) => i !== index),
+        variantGroups: variantGroups.filter((_, i) => i !== index),
       };
     });
-  };
+  }
 
-  const handleSubmit = (e) => {
+  function handleSubmit(e) {
     e.preventDefault();
     onSubmit(product);
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit}>
       <ProductBasicInfo product={product} onChange={updateField} />
 
       <ProductVariants
-        variants={product.variants ?? [emptyVariant]}
-        onVariantChange={updateVariant}
-        onAddVariant={addVariant}
-        onRemoveVariant={removeVariant}
+        variantGroups={product.variantGroups ?? []}
+        attributes={product._attributes ?? []}
+        onVariantGroupChange={updateVariantGroup}
+        onAddVariantGroup={addVariantGroup}
+        onRemoveVariantGroup={removeVariantGroup}
       />
 
       <div className="flex justify-end w-full">

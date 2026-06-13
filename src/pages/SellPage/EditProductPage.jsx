@@ -3,7 +3,12 @@ import { useParams } from "react-router-dom";
 import { AppLink, Spinner } from "../../components/ui";
 import { LeftArrowIcon } from "../../components/icons";
 import { ProductForm } from "../../components/products";
-import { getProductForEdit } from "../../api/products";
+import {
+  getProductForEdit,
+  getCategories,
+  getAttributes,
+} from "../../api/products";
+import { normalizeProductForForm } from "../../helpers/productFormMapper";
 
 export function EditProductPage() {
   const { productId } = useParams();
@@ -18,8 +23,13 @@ export function EditProductPage() {
       setError(null);
 
       try {
-        const data = await getProductForEdit(productId);
-        setProduct(data);
+        const [productData, categoriesData, attributesData] = await Promise.all(
+          [getProductForEdit(productId), getCategories(), getAttributes()],
+        );
+
+        setProduct(
+          normalizeProductForForm(productData, categoriesData, attributesData),
+        );
       } catch (err) {
         setError("Ocurrió un error al cargar el producto.");
       } finally {
@@ -51,12 +61,8 @@ export function EditProductPage() {
       <section className="container mx-auto py-64 ">
         <div className="w-full grow flex flex-col items-center justify-center gap-8">
           <h1 className="font-logo uppercase text-8xl text-center">
-            Producto no encontrado
+            Acceso denegado
           </h1>
-          <AppLink to="/">
-            <LeftArrowIcon />
-            <span>Volver a la página de inicio</span>
-          </AppLink>
         </div>
       </section>
     );

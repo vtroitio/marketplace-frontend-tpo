@@ -20,3 +20,17 @@ export function getProductForEdit(productId) {
     auth: true,
   });
 }
+
+export function getAttributes() {
+  return request("/attributes", {
+    method: "GET",
+    auth: false,
+  });
+}
+
+export function getCategories() {
+  return request("/categories", {
+    method: "GET",
+    auth: false,
+  });
+}

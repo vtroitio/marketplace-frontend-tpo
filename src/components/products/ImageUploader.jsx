@@ -33,7 +33,7 @@ export function ImageUploader({ images = [], onChange, maxImages = 4 }) {
               {image ? (
                 <>
                   <img
-                    src={image.preview}
+                    src={image.path}
                     alt={`Imagen ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
