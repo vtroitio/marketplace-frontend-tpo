@@ -8,19 +8,19 @@ const featuredProducts = [
   {
     id: 1,
     title: 'Hoodie Type-01 "Ghost"',
-    price: "$120.00",
+    price: 120,
     image: hoodieImage,
   },
   {
     id: 2,
     title: "T-Shirt Unit-02",
-    price: "$45.00",
+    price: 45,
     image: tshirtImage,
   },
   {
     id: 3,
     title: "T-Shirt Unit-02",
-    price: "$45.00",
+    price: 45,
     image: tshirtImage,
   },
 ];
