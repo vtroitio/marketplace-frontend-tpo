@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { formatCurrency } from "../../helpers/formatters";
 
 export function Card({
   image,
@@ -51,7 +52,7 @@ export function Card({
             {title}
           </h3>
           <p className={`font-normal text-secondary ${styles.price}`}>
-            {price}
+            {formatCurrency(price)}
           </p>
         </div>
       </Link>

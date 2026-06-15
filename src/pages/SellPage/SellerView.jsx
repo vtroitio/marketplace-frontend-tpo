@@ -1,11 +1,30 @@
-import { useState } from "react";
-import { Button } from "../../components/ui";
+import { useState, useEffect } from "react";
+import { Button, Spinner } from "../../components/ui";
 import { InventoryTable } from "../../components/products";
 import { SearchBar } from "../../components/ui/SearchBar";
-import { sellerProducts } from "../../data/sellerProdcuts";
+import { getOwnedProducts } from "../../api/products";
 
 export function SellerView() {
-  const [products, setProducts] = useState(sellerProducts);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchOwnedProducts = async () => {
+      try {
+        setLoading(true);
+
+        const data = await getOwnedProducts();
+        setProducts(data?.content || []);
+      } catch (error) {
+        setError("Ocurrió un error al cargar tus productos");
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOwnedProducts();
+  }, []);
 
   const handleToggleActive = (productId) => {
     setProducts((prevProducts) =>
@@ -38,7 +57,19 @@ export function SellerView() {
           )}
         </div>
       </div>
-      {products.length ? (
+      {loading ? (
+        <div className="flex flex-col items-center gap-4 py-16">
+          <Spinner />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-4 py-16">
+          <h2>{error}</h2>
+          <p className="text-center w-2/3">
+            Por favor, intenta recargar la página o contacta al soporte si el
+            problema persiste.
+          </p>
+        </div>
+      ) : products.length ? (
         <div className="flex flex-col items-center gap-4 my-8">
           <SearchBar />
           <InventoryTable

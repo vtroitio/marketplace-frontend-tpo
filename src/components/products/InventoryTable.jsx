@@ -21,16 +21,16 @@ export function InventoryTable({ products, onToggleActive, onDeleteProduct }) {
               <td className="py-2 px-4">
                 <div className="flex items-center gap-4">
                   <img
-                    src={product.image}
+                    src={product.coverImagePath}
                     alt={product.name}
                     className="w-32 h-32 object-cover"
                   />
                   <h4>{product.name}</h4>
                 </div>
               </td>
-              <td className="py-2 px-4">3</td>
+              <td className="py-2 px-4">{product.totalVariants || 0}</td>
               <td className="py-2 px-4">${product.price.toFixed(2)}</td>
-              <td className="py-2 px-4">{product.stock}</td>
+              <td className="py-2 px-4">{product.totalStock || 0}</td>
               <td className="py-2 px-4">
                 {product.isActive ? "Activa" : "Inactiva"}
               </td>

@@ -10,7 +10,7 @@ export function CreateProductPage() {
   return (
     <div className="container mx-auto py-32 ">
       <div className="pb-4 border-b border-secondary">
-        <AppLink to="/sell?role=seller">
+        <AppLink to="/sell">
           <LeftArrowIcon />
           <span>Volver</span>
         </AppLink>

@@ -27,10 +27,30 @@ export function saveAccessToken(accessToken) {
 }
 
 /**
+ * Saves the user's role to localStorage.
+ *
+ * @param {string} userRole
+ * @returns {void}
+ */
+export function saveUserRole(userRole) {
+  localStorage.setItem("userRole", userRole);
+}
+
+/**
+ * Retrieves the user's role from localStorage.
+ *
+ * @returns {string | null} User's role or null if not found.
+ */
+export function getUserRole() {
+  return localStorage.getItem("userRole");
+}
+
+/**
  * Removes the access token from localStorage, effectively logging out the user.
  *
  * @returns {void}
  */
 export function clearSession() {
+  localStorage.removeItem("userRole");
   localStorage.removeItem("accessToken");
 }

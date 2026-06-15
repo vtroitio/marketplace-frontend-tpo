@@ -1,13 +1,13 @@
-import { useSearchParams } from "react-router-dom";
 import { BecomeSellerView } from "./BecomeSellerView";
 import { SellerView } from "./SellerView";
+import { getUserRole } from "../../helpers/authStorage";
+import { hasRole, ROLES } from "../../helpers/roles";
 
 export function SellPage() {
-  const [searchParams] = useSearchParams();
-  const role = searchParams.get("role") || "buyer";
+  const userRole = getUserRole();
 
-  if (role === "buyer") return <BecomeSellerView />;
-  if (role === "seller") return <SellerView />;
+  if (ROLES.BUYER === userRole) return <BecomeSellerView />;
+  if (hasRole(ROLES.SELLER, userRole)) return <SellerView />;
 
   return <BecomeSellerView />;
 }

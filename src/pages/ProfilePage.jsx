@@ -8,7 +8,7 @@ const emptyUserData = {
   username: "",
   name: "",
   surname: "",
-  role: "",
+  role: {},
 };
 
 export function ProfilePage() {
@@ -34,7 +34,7 @@ export function ProfilePage() {
           email: user.email ?? "",
           name: user.name ?? "",
           surname: user.surname ?? "",
-          role: user.role ?? "",
+          role: user.role ?? {},
         };
 
         if (!ignore) {
@@ -101,7 +101,7 @@ export function ProfilePage() {
           <h2>
             {savedData.name} {savedData.surname}
           </h2>
-          <p>{savedData.role}</p>
+          <p>{savedData.role.name}</p>
         </div>
 
         <hr className="border-tertiary mb-10" />

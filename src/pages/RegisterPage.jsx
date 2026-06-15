@@ -2,7 +2,12 @@ import { useState } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import { LeftArrowIcon } from "../components/icons";
 import { register } from "../api/auth";
-import { saveAccessToken, isAuthenticated } from "../helpers/authStorage";
+import { getProfile } from "../api/users";
+import {
+  saveAccessToken,
+  saveUserRole,
+  isAuthenticated,
+} from "../helpers/authStorage";
 import { AppLink, Button, Input } from "../components/ui";
 
 export function RegisterPage() {
@@ -42,8 +47,10 @@ export function RegisterPage() {
       setError(null);
 
       const data = await register(form);
-
       saveAccessToken(data.accessToken);
+
+      const user = await getProfile();
+      saveUserRole(user.role.code);
 
       navigate(from, { replace: true });
     } catch (err) {
