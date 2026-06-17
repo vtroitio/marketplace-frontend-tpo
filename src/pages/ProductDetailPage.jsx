@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { useCart } from "../cart/CartContext";
+import { useToast } from "../toast/ToastContext";
 import { Button, Spinner } from "../components/ui";
 import { CartIcon, PencilIcon, StarIcon } from "../components/icons";
 import { getProductById } from "../api/products";
@@ -98,6 +100,8 @@ function getImagesByColor(variants = [], selectedColorId) {
 export function ProductDetailPage() {
   const { productId } = useParams();
   const { currentUser, authLoading } = useAuth();
+  const { addItem } = useCart();
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -154,6 +158,10 @@ export function ProductDetailPage() {
     );
   }, [product, selectedColorId, selectedSizeId]);
 
+  const selectedSize = useMemo(() => {
+    return availableSizes.find((size) => size.id === selectedSizeId) ?? null;
+  }, [availableSizes, selectedSizeId]);
+
   const selectedColor = useMemo(() => {
     return colors.find((color) => color.id === selectedColorId) ?? null;
   }, [colors, selectedColorId]);
@@ -195,16 +203,35 @@ export function ProductDetailPage() {
     setSelectedSizeId(firstSize?.id ?? null);
   }
 
-  function handleAddToCart() {
-    if (!selectedVariant) return;
-
-    console.log("Agregar al carrito:", {
+  const handleAddToCart = () => {
+    const result = addItem({
+      id: selectedVariant.id,
       productId: product.id,
-      variantId: selectedVariant.id,
-      sku: selectedVariant.sku,
+      name: product.name,
+      size: selectedSize,
+      color: selectedColor,
+      price: selectedVariant.price,
       quantity: 1,
+      maxStock: selectedVariant.stock,
+      image: selectedVariant.images?.[0]?.url ?? product.coverImageUrl,
     });
-  }
+
+    if (!result.ok) {
+      if (result.status === "STOCK_LIMIT") {
+        toast.error(result.message, {
+          title: "Limite de stock alcanzado",
+          duration: 3500,
+        });
+      }
+      return;
+    }
+
+    toast.success(result.message, {
+      title: "¡Éxito!",
+      duration: 3500,
+
+    });
+  };
 
   if (loading || authLoading) {
     return (
