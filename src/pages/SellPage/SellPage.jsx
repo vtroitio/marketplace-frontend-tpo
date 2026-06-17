@@ -1,13 +1,22 @@
 import { BecomeSellerView } from "./BecomeSellerView";
 import { SellerView } from "./SellerView";
-import { getUserRole } from "../../helpers/authStorage";
+import { useAuth } from "../../auth/AuthContext";
 import { hasRole, ROLES } from "../../helpers/roles";
 
 export function SellPage() {
-  const userRole = getUserRole();
+  const { isAuthenticated, userRole } = useAuth();
 
-  if (ROLES.BUYER === userRole) return <BecomeSellerView />;
-  if (hasRole(ROLES.SELLER, userRole)) return <SellerView />;
+  if (!isAuthenticated) {
+    return <BecomeSellerView />;
+  }
+
+  if (userRole === ROLES.BUYER) {
+    return <BecomeSellerView />;
+  }
+
+  if (hasRole(ROLES.SELLER, userRole)) {
+    return <SellerView />;
+  }
 
   return <BecomeSellerView />;
 }
