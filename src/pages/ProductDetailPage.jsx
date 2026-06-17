@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 import { Button, Spinner } from "../components/ui";
-import { CartIcon, StarIcon } from "../components/icons";
+import { CartIcon, PencilIcon, StarIcon } from "../components/icons";
 import { getProductById } from "../api/products";
 import { formatCurrency } from "../helpers/formatters";
 
@@ -96,6 +97,7 @@ function getImagesByColor(variants = [], selectedColorId) {
 
 export function ProductDetailPage() {
   const { productId } = useParams();
+  const { currentUser, authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -104,6 +106,7 @@ export function ProductDetailPage() {
   const [selectedColorId, setSelectedColorId] = useState(null);
   const [selectedSizeId, setSelectedSizeId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -123,6 +126,7 @@ export function ProductDetailPage() {
         setSelectedColorId(firstColor?.id ?? null);
         setSelectedSizeId(firstSize?.id ?? null);
         setSelectedImage(firstImage);
+        setIsOwner(data.owner.id === currentUser?.id);
       } catch (error) {
         console.error("Error fetching product details:", error);
         setError(error);
@@ -132,7 +136,7 @@ export function ProductDetailPage() {
     };
 
     fetchProduct();
-  }, [productId]);
+  }, [productId, currentUser]);
 
   const colors = useMemo(() => {
     return getUniqueColors(product?.variants ?? []);
@@ -202,7 +206,7 @@ export function ProductDetailPage() {
     });
   }
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="bg-neutral min-h-screen flex items-center justify-center">
         <Spinner />
@@ -266,7 +270,9 @@ export function ProductDetailPage() {
               <h1>{product.name}</h1>
 
               <div className="mt-2">
-                <h3>{formatCurrency(selectedVariant?.price ?? product.price)}</h3>
+                <h3>
+                  {formatCurrency(selectedVariant?.price ?? product.price)}
+                </h3>
               </div>
 
               <div className="mt-2 text-sm text-tertiary">
@@ -344,14 +350,25 @@ export function ProductDetailPage() {
               </div>
             </div>
 
-            <Button
-              fullWidth
-              disabled={!selectedVariant || selectedVariant.stock <= 0}
-              onClick={handleAddToCart}
-            >
-              <CartIcon size={18} />
-              {selectedVariant?.stock > 0 ? "Añadir al carrito" : "Sin stock"}
-            </Button>
+            {!isOwner ? (
+              <Button
+                fullWidth
+                disabled={!selectedVariant || selectedVariant.stock <= 0}
+                onClick={handleAddToCart}
+              >
+                <CartIcon size={18} />
+                {selectedVariant?.stock > 0 ? "Añadir al carrito" : "Sin stock"}
+              </Button>
+            ) : (
+              <Button
+                to={`/sell/edit/${product.id}`}
+                fullWidth
+                variant="outline"
+              >
+                <PencilIcon size={18} />
+                Editar producto
+              </Button>
+            )}
           </div>
         </div>
 

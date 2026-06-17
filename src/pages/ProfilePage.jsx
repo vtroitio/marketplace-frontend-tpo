@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { ProfileIcon } from "../components/icons";
-import { getProfile, updateProfile } from "../api/users";
+import { useAuth } from "../auth/AuthContext";
+import { updateProfile } from "../api/users";
 
 const emptyUserData = {
   username: "",
@@ -11,57 +12,65 @@ const emptyUserData = {
   role: {},
 };
 
+function mapUserToFormData(user) {
+  if (!user) return emptyUserData;
+
+  return {
+    username: user.username ?? "",
+    name: user.name ?? "",
+    surname: user.surname ?? "",
+    role: user.role ?? {},
+  };
+}
+
 export function ProfilePage() {
-  const [formData, setFormData] = useState(emptyUserData);
-  const [savedData, setSavedData] = useState(emptyUserData);
+  const { currentUser, authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-neutral">
+        <div className="mx-auto max-w-3xl px-8 py-12">
+          <p>Cargando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-neutral">
+        <div className="mx-auto max-w-3xl px-8 py-12">
+          <p>No hay un usuario autenticado.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ProfileForm
+      key={currentUser.id}
+      initialData={mapUserToFormData(currentUser)}
+    />
+  );
+}
+
+function ProfileForm({ initialData }) {
+  const [formData, setFormData] = useState(initialData);
+  const [savedData, setSavedData] = useState(initialData);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadProfile() {
-      try {
-        setLoading(true);
-        setError("");
-
-        const user = await getProfile();
-
-        const mappedUser = {
-          id: user.id ?? "",
-          username: user.username ?? "",
-          email: user.email ?? "",
-          name: user.name ?? "",
-          surname: user.surname ?? "",
-          role: user.role ?? {},
-        };
-
-        if (!ignore) {
-          setFormData(mappedUser);
-          setSavedData(mappedUser);
-        }
-      } catch (err) {
-        if (!ignore) {
-          setError(err.message);
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  const roleName =
+    typeof savedData.role === "string" ? savedData.role : savedData.role?.name;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -69,7 +78,6 @@ export function ProfilePage() {
 
     const isSameData =
       formData.username === savedData.username &&
-      formData.email === savedData.email &&
       formData.name === savedData.name &&
       formData.surname === savedData.surname;
 
@@ -78,17 +86,21 @@ export function ProfilePage() {
     try {
       setLoading(true);
       setError("");
-      await updateProfile(formData);
+
+      await updateProfile({
+        username: formData.username,
+        name: formData.name,
+        surname: formData.surname,
+      });
+
+      setSavedData({ ...formData });
+
+      console.log("Datos guardados:", formData);
     } catch (err) {
       setError(err.message);
-      return;
     } finally {
       setLoading(false);
     }
-
-    setSavedData({ ...formData });
-
-    console.log("Datos guardados:", formData);
   };
 
   return (
@@ -98,10 +110,12 @@ export function ProfilePage() {
           <div className="border border-secondary p-3">
             <ProfileIcon size={32} />
           </div>
+
           <h2>
             {savedData.name} {savedData.surname}
           </h2>
-          <p>{savedData.role.name}</p>
+
+          <p>{roleName}</p>
         </div>
 
         <hr className="border-tertiary mb-10" />
@@ -121,6 +135,7 @@ export function ProfilePage() {
                 onChange={handleChange}
                 required
               />
+
               <Input
                 label="Apellido"
                 type="text"
@@ -144,6 +159,7 @@ export function ProfilePage() {
               <Button type="submit" disabled={loading}>
                 {loading ? "Guardando..." : "Guardar datos"}
               </Button>
+
               <p className="min-h-6 text-primary text-center">{error}</p>
             </div>
           </form>
@@ -164,8 +180,12 @@ export function ProfilePage() {
                   Último cambio hace 3 meses
                 </span>
               </div>
-              <Button fullWidth variant="outline">Cambiar email</Button>
+
+              <Button fullWidth variant="outline">
+                Cambiar email
+              </Button>
             </div>
+
             <div className="border border-tertiary p-6 gap-16 flex items-center justify-between">
               <div className="w-full">
                 <p>Contraseña</p>
@@ -173,7 +193,10 @@ export function ProfilePage() {
                   Último cambio hace 3 meses
                 </span>
               </div>
-              <Button fullWidth variant="outline">Restablecer contraseña</Button>
+
+              <Button fullWidth variant="outline">
+                Restablecer contraseña
+              </Button>
             </div>
           </div>
         </section>

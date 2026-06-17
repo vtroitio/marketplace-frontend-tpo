@@ -5,7 +5,6 @@ import { useToast } from "../toast/ToastContext";
 import {
   clearSession,
   getAccessToken,
-  getUserRole,
   saveSession,
 } from "../helpers/authStorage";
 import {
@@ -13,42 +12,68 @@ import {
   logout as logoutRequest,
   register as registerRequest,
 } from "../api/auth";
+import { getProfile } from "../api/users";
 
 export function AuthProvider({ children }) {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return Boolean(getAccessToken());
-  });
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  const [userRole, setUserRole] = useState(() => {
-    return getUserRole();
-  });
+  const isAuthenticated = Boolean(currentUser);
 
   const clearAuthState = useCallback(() => {
     clearSession();
-    setIsAuthenticated(false);
-    setUserRole(null);
+    setCurrentUser(null);
   }, []);
 
-  const startSession = useCallback((data) => {
-    const role = getUserRole(data.accessToken);
+  const loadCurrentUser = useCallback(async () => {
+    const accessToken = getAccessToken();
 
-    saveSession({
-      accessToken: data.accessToken,
-      userRole: role,
-    });
+    if (!accessToken) {
+      setCurrentUser(null);
+      setAuthLoading(false);
+      return null;
+    }
 
-    setIsAuthenticated(true);
-    setUserRole(role);
-  }, []);
+    try {
+      setAuthLoading(true);
+
+      const user = await getProfile();
+
+      setCurrentUser(user);
+
+      return user;
+    } catch (error) {
+      console.error(error);
+
+      clearAuthState();
+
+      return null;
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [clearAuthState]);
+
+  const startSession = useCallback(
+    async (data) => {
+      saveSession({
+        accessToken: data.accessToken,
+      });
+
+      const user = await loadCurrentUser();
+
+      return user;
+    },
+    [loadCurrentUser],
+  );
 
   const login = useCallback(
     async (credentials) => {
       const data = await loginRequest(credentials);
 
-      startSession(data);
+      await startSession(data);
 
       return data;
     },
@@ -60,7 +85,7 @@ export function AuthProvider({ children }) {
       const data = await registerRequest(userData);
 
       if (data?.accessToken) {
-        startSession(data);
+        await startSession(data);
       }
 
       toast.success("Tu cuenta fue creada exitosamente.", {
@@ -109,6 +134,10 @@ export function AuthProvider({ children }) {
     }
   }, [logoutFrontend, toast]);
 
+  useEffect(() => async () => {
+    await loadCurrentUser();
+  }, [loadCurrentUser]);
+
   useEffect(() => {
     window.addEventListener("auth:session-expired", handleSessionExpired);
 
@@ -119,14 +148,25 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      currentUser,
       isAuthenticated,
-      userRole,
+      authLoading,
       login,
       register,
       logout,
       logoutFrontend,
+      reloadCurrentUser: loadCurrentUser,
     }),
-    [isAuthenticated, userRole, login, register, logout, logoutFrontend],
+    [
+      currentUser,
+      isAuthenticated,
+      authLoading,
+      login,
+      register,
+      logout,
+      logoutFrontend,
+      loadCurrentUser,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
