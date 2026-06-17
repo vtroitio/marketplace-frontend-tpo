@@ -203,8 +203,8 @@ export function ProductDetailPage() {
     setSelectedSizeId(firstSize?.id ?? null);
   }
 
-  const handleAddToCart = () => {
-    const result = addItem({
+  const handleAddToCart = async () => {
+    const result = await addItem({
       id: selectedVariant.id,
       productId: product.id,
       name: product.name,
@@ -213,7 +213,7 @@ export function ProductDetailPage() {
       price: selectedVariant.price,
       quantity: 1,
       maxStock: selectedVariant.stock,
-      image: selectedVariant.images?.[0]?.url ?? product.coverImageUrl,
+      image: product.coverImagePath,
     });
 
     if (!result.ok) {
