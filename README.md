@@ -237,6 +237,8 @@ Para saber qué opción seleccionó el usuario, se usa event.target.value dentro
 Prop disponible:
 * `label`: Para cambiar el texto del label
 
+---
+
 ### `Toast`
 
 Componente utilizado para mostrar notificaciones temporales en la interfaz.
