@@ -236,3 +236,64 @@ Para saber qué opción seleccionó el usuario, se usa event.target.value dentro
 ```
 Prop disponible:
 * `label`: Para cambiar el texto del label
+
+### `Toast`
+
+Componente utilizado para mostrar notificaciones temporales en la interfaz.
+
+Desde cualquier componente dentro de la aplicación, se puede usar el hook `useToast`:
+
+```jsx
+import { useToast } from "../toast/ToastContext.jsx";
+
+export function HowToUseToasts() {
+  const toast = useToast();
+
+  return (
+    <div>
+      <button onClick={() => toast.success("Operación realizada correctamente")}>
+        Mostrar éxito
+      </button>
+
+      <button onClick={() => toast.error("Ocurrió un error")}>
+        Mostrar error
+      </button>
+
+      <button onClick={() => toast.warning("Revisá los datos ingresados")}>
+        Mostrar advertencia
+      </button>
+
+      <button onClick={() => toast.info("Información importante")}>
+        Mostrar información
+      </button>
+    </div>
+  );
+}
+```
+
+Métodos disponibles:
+
+* `toast.success(message, options)`: muestra una notificación de éxito.
+* `toast.error(message, options)`: muestra una notificación de error.
+* `toast.warning(message, options)`: muestra una advertencia.
+* `toast.info(message, options)`: muestra una notificación informativa.
+* `toast.showToast(options)`: permite crear un toast personalizado.
+* `toast.removeToast(id)`: permite cerrar un toast manualmente.
+
+También se pueden pasar opciones adicionales como `title` y `duration`:
+
+```jsx
+toast.success("Producto publicado", {
+  title: "Éxito",
+  duration: 3000,
+});
+```
+
+Si se quiere que el toast no se cierre automáticamente, se puede usar:
+
+```jsx
+toast.info("Este mensaje queda fijo", {
+  duration: Infinity,
+});
+```
+
