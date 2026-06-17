@@ -1,18 +1,14 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import { LeftArrowIcon } from "../components/icons";
-import { register } from "../api/auth";
-import { getProfile } from "../api/users";
-import {
-  saveAccessToken,
-  saveUserRole,
-  isAuthenticated,
-} from "../helpers/authStorage";
+import { useAuth } from "../auth/AuthContext";
 import { AppLink, Button, Input } from "../components/ui";
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { isAuthenticated, register } = useAuth();
 
   const from = location.state?.from
     ? location.state.from.pathname + location.state.from.search
@@ -30,7 +26,7 @@ export function RegisterPage() {
   const [error, setError] = useState(null);
   const [repeatPassword, setRepeatPassword] = useState("");
 
-  if (isAuthenticated()) {
+  if (isAuthenticated) {
     return <Navigate to={from} replace />;
   }
 
@@ -46,11 +42,7 @@ export function RegisterPage() {
       setLoading(true);
       setError(null);
 
-      const data = await register(form);
-      saveAccessToken(data.accessToken);
-
-      const user = await getProfile();
-      saveUserRole(user.role.code);
+      await register(form);
 
       navigate(from, { replace: true });
     } catch (err) {

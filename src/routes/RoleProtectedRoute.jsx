@@ -1,15 +1,22 @@
-import { Navigate } from "react-router-dom";
-import { getUserRole, isAuthenticated } from "../helpers/authStorage";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 export function RoleProtectedRoute({ children, allowedRoles }) {
-  const role = getUserRole();
+  const location = useLocation();
+  const { isAuthenticated, userRole } = useAuth();
 
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/login"
+        state={{ from: location }}
+        replace
+      />
+    );
   }
 
-  if (!allowedRoles.includes(role)) {
-    return <Navigate to="*" replace />;
+  if (!allowedRoles.includes(userRole)) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
