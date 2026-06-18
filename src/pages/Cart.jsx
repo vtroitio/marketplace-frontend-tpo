@@ -19,6 +19,7 @@ export function Cart() {
     cartLoading,
     cartError,
   } = useCart();
+  const leftColClass = cartItems.length === 0 ? "lg:col-span-3" : "lg:col-span-2";
   const { isAuthenticated, authLoading } = useAuth();
 
   const shippingCost = 15.0;
@@ -72,14 +73,16 @@ export function Cart() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
-        <div className="lg:col-span-2">
+        <div className={leftColClass}>
           {cartItems.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-tertary">
-              <p>Tu carrito está vacío.</p>
+            <div className="w-full py-12 border border-dashed border-tertiary flex flex-col items-center justify-center text-center min-h-[200px]">
+              <div>
+                <p>Tu carrito está vacío.</p>
 
-              <AppLink variant="underline" to="/explore">
-                Volver a la tienda
-              </AppLink>
+                <AppLink variant="underline" to="/explore">
+                  Volver a la tienda
+                </AppLink>
+              </div>
             </div>
           ) : (
             cartItems.map((item, index) => (

@@ -165,9 +165,9 @@ function ProfileForm({ initialData }) {
           </form>
         </section>
 
-        <hr className="border-tertiary mb-10" />
+        {/* <hr className="border-tertiary mb-10" /> */}
 
-        <section>
+        {/* <section>
           <div className="mb-8">
             <h3>Seguridad</h3>
           </div>
@@ -199,7 +199,7 @@ function ProfileForm({ initialData }) {
               </Button>
             </div>
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   );
