@@ -3,7 +3,6 @@ import { isGenderCategory, isTypeCategory } from "../../helpers/productFormMappe
 
 export function ProductBasicInfo({ product, onChange }) {
   const categories = product._categories || [];
-
   const gender = product.selectedGender?.code ?? "";
   const type = product.selectedType?.code ?? "";
 
@@ -12,9 +11,7 @@ export function ProductBasicInfo({ product, onChange }) {
   }
 
   function handleGenderChange(value) {
-    const genderCategory = categories.find(
-      (category) => category.code === value,
-    );
+    const genderCategory = categories.find((category) => category.code === value);
     onChange("selectedGender", genderCategory);
     onChange("selectedType", null);
   }
@@ -24,6 +21,9 @@ export function ProductBasicInfo({ product, onChange }) {
     onChange("selectedType", typeCategory);
   }
 
+  const descLength = (product.description || "").length;
+  const DESC_MAX = 500;
+
   return (
     <section className="flex flex-col gap-8 py-16">
       <Input
@@ -31,6 +31,8 @@ export function ProductBasicInfo({ product, onChange }) {
         value={product.name || ""}
         onChange={(e) => handleFieldChange("name", e.target.value)}
         placeholder="Remera Naruto"
+        minLength={3}
+        maxLength={60}
       />
 
       <div className="flex gap-8">
@@ -64,12 +66,20 @@ export function ProductBasicInfo({ product, onChange }) {
         </Select>
       </div>
 
-      <Textarea
-        label="Descripción"
-        value={product.description || ""}
-        onChange={(e) => handleFieldChange("description", e.target.value)}
-        placeholder="Remera Naruto"
-      />
+      <div className="flex flex-col gap-1">
+        <Textarea
+          label="Descripción"
+          value={product.description || ""}
+          onChange={(e) => handleFieldChange("description", e.target.value)}
+          placeholder="Describí tu prenda..."
+          maxLength={DESC_MAX}
+        />
+        <div className="flex justify-end">
+          <span style={{ fontSize: "0.75rem", color: descLength >= DESC_MAX ? "#ef4444" : "#9ca3af" }}>
+            {descLength}/{DESC_MAX}
+          </span>
+        </div>
+      </div>
     </section>
   );
 }

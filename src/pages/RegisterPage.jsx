@@ -25,6 +25,7 @@ export function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [repeatPassword, setRepeatPassword] = useState("");
 
   if (isAuthenticated) {
@@ -42,12 +43,18 @@ export function RegisterPage() {
     try {
       setLoading(true);
       setError(null);
+      setFieldErrors({});
 
       await register(form);
 
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err?.message || "Error al crear cuenta");
+      if (err?.errors) {
+        setFieldErrors(err.errors);
+        setError("Corregí los errores del formulario.");
+      } else {
+        setError(err?.message || "Error al crear cuenta");
+      }
     } finally {
       setLoading(false);
     }
@@ -119,14 +126,25 @@ export function RegisterPage() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
               />
-              <Input
-                label="Contraseña"
-                type="password"
-                placeholder="Mínimo 8 caracteres"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                required
-              />
+              <div>
+                <Input
+                  label="Contraseña"
+                  type="password"
+                  placeholder="Mínimo 8 caracteres"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required
+                />
+                {fieldErrors.password ? (
+                  <div className="mt-1">
+                    <p className="text-xs text-primary">{fieldErrors.password}</p>
+                  </div>
+                ) : (
+                  <div className="mt-1">
+                    <p className="text-xs text-secondary">Debe contener mayúsculas, minúsculas y números.</p>
+                  </div>
+                )}
+              </div>
               <Input
                 label="Repetir Contraseña"
                 type="password"

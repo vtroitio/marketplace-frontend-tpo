@@ -314,7 +314,7 @@ export function ProductDetailPage() {
         const firstColor = firstVariant ? getColor(firstVariant) : null;
         const firstSize = firstVariant ? getSize(firstVariant) : null;
         const firstImage =
-          firstVariant?.images?.[0]?.path ?? data.coverImagePath ?? null;
+          data.coverImagePath ?? firstVariant?.images?.[0]?.path ?? null;
 
         setSelectedColorId(firstColor?.id ?? null);
         setSelectedSizeId(firstSize?.id ?? null);
@@ -387,12 +387,16 @@ export function ProductDetailPage() {
   }, [colors, selectedColorId]);
 
   const selectedColorImages = useMemo(() => {
-    return getImagesByColor(product?.variants ?? [], selectedColorId);
+    const images = getImagesByColor(product?.variants ?? [], selectedColorId);
+    const cover = product?.coverImagePath;
+    if (!cover) return images;
+    return [
+      ...images.filter((img) => img.path === cover),
+      ...images.filter((img) => img.path !== cover),
+    ];
   }, [product, selectedColorId]);
 
-  const imagesToShow = selectedVariant?.images?.length
-    ? selectedVariant.images
-    : selectedColorImages;
+  const imagesToShow = selectedColorImages;
 
   const rating = useMemo(() => {
     if (reviews.length === 0) return 0;
@@ -402,17 +406,17 @@ export function ProductDetailPage() {
 
   const displayedImage = useMemo(() => {
     return (
-      selectedVariant?.images?.[0]?.path ??
       selectedColorImages?.[0]?.path ??
       product?.coverImagePath
     );
-  }, [selectedVariant, selectedColorImages, product]);
+  }, [selectedColorImages, product]);
 
   function handleColorSelect(colorId) {
     setSelectedColorId(colorId);
     const sizesForColor = getSizesByColor(product?.variants ?? [], colorId);
     const firstSize = sizesForColor[0] ?? null;
     setSelectedSizeId(firstSize?.id ?? null);
+    setSelectedImage(null);
   }
 
   const handleAddToCart = async () => {
@@ -485,12 +489,42 @@ export function ProductDetailPage() {
       <div className="mx-auto max-w-295 px-8 py-12 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           <div className="space-y-4">
-            <div className="border border-secondary overflow-hidden aspect-square">
+            <div className="border border-secondary overflow-hidden aspect-square relative group">
               <img
-                src={displayedImage}
+                src={selectedImage ?? displayedImage}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
+              {imagesToShow.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = selectedImage ?? displayedImage;
+                      const idx = imagesToShow.findIndex((img) => img.path === current);
+                      const prev = imagesToShow[(idx - 1 + imagesToShow.length) % imagesToShow.length];
+                      setSelectedImage(prev.path);
+                    }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border border-secondary w-9 h-9 flex items-center justify-center transition-opacity cursor-pointer"
+                    aria-label="Imagen anterior"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = selectedImage ?? displayedImage;
+                      const idx = imagesToShow.findIndex((img) => img.path === current);
+                      const next = imagesToShow[(idx + 1) % imagesToShow.length];
+                      setSelectedImage(next.path);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border border-secondary w-9 h-9 flex items-center justify-center transition-opacity cursor-pointer"
+                    aria-label="Imagen siguiente"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="flex gap-4 overflow-x-auto">
@@ -500,7 +534,7 @@ export function ProductDetailPage() {
                   type="button"
                   onClick={() => setSelectedImage(image.path)}
                   className={`border-2 overflow-hidden w-24 h-24 flex-shrink-0 ${
-                    selectedImage === image.path
+                    (selectedImage ?? displayedImage) === image.path
                       ? "border-primary"
                       : "border-secondary"
                   }`}

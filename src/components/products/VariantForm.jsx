@@ -5,6 +5,16 @@ import {
   ATTRIBUTES,
 } from "../../helpers/productFormMapper";
 
+const STOCK_MAX = 9999;
+const PRICE_MAX = 9999999;
+
+function formatPrice(value) {
+  if (!value && value !== 0) return "";
+  const num = parseInt(String(value).replace(/\D/g, ""), 10);
+  if (isNaN(num)) return "";
+  return num.toLocaleString("de-DE");
+}
+
 export function VariantForm({
   index,
   group,
@@ -18,7 +28,6 @@ export function VariantForm({
 
   function handleColorChange(value) {
     const color = colors.find((color) => color.code === value);
-
     onChange(index, "color", {
       colorAttributeValueId: color.id,
       colorCode: color.code,
@@ -37,15 +46,13 @@ export function VariantForm({
     );
 
     if (alreadySelected) {
-      const newSizes = group.sizes.filter(
+      onChange(index, "sizes", group.sizes.filter(
         (selectedSize) => selectedSize.sizeAttributeValueId !== size.id,
-      );
-
-      onChange(index, "sizes", newSizes);
+      ));
       return;
     }
 
-    const newSizes = [
+    onChange(index, "sizes", [
       ...group.sizes,
       {
         variantId: null,
@@ -56,24 +63,37 @@ export function VariantForm({
         price: "",
         stock: "",
       },
-    ];
-
-    onChange(index, "sizes", newSizes);
+    ]);
   }
 
   function handleSizeFieldChange(sizeAttributeValueId, field, value) {
     const newSizes = group.sizes.map((size) => {
-      if (size.sizeAttributeValueId !== sizeAttributeValueId) {
-        return size;
-      }
-
-      return {
-        ...size,
-        [field]: value,
-      };
+      if (size.sizeAttributeValueId !== sizeAttributeValueId) return size;
+      return { ...size, [field]: value };
     });
-
     onChange(index, "sizes", newSizes);
+  }
+
+  function handlePriceChange(sizeAttributeValueId, rawValue) {
+    const digits = rawValue.replace(/\D/g, "");
+    const num = parseInt(digits, 10);
+    if (!digits) {
+      handleSizeFieldChange(sizeAttributeValueId, "price", "");
+      return;
+    }
+    const clamped = Math.min(num, PRICE_MAX);
+    handleSizeFieldChange(sizeAttributeValueId, "price", String(clamped));
+  }
+
+  function handleStockChange(sizeAttributeValueId, rawValue) {
+    const digits = rawValue.replace(/\D/g, "");
+    const num = parseInt(digits, 10);
+    if (!digits) {
+      handleSizeFieldChange(sizeAttributeValueId, "stock", "");
+      return;
+    }
+    const clamped = Math.min(num, STOCK_MAX);
+    handleSizeFieldChange(sizeAttributeValueId, "stock", String(clamped));
   }
 
   return (
@@ -107,10 +127,7 @@ export function VariantForm({
         </div>
 
         <div className="flex flex-col gap-4 w-1/2">
-          <p>
-            <b>TALLAS DISPONIBLES</b>
-          </p>
-
+          <div><b>TALLAS DISPONIBLES</b></div>
           <div className="flex gap-2">
             {sizes.map((size) => {
               const isSelected = group.sizes.some(
@@ -136,10 +153,7 @@ export function VariantForm({
       </div>
 
       {group.sizes.map((size) => (
-        <div
-          key={size.sizeAttributeValueId}
-          className="flex flex-row w-full gap-4"
-        >
+        <div key={size.sizeAttributeValueId} className="flex flex-row w-full gap-4">
           <div className="shrink">
             <Input label="Talla" value={size.sizeValue} disabled />
           </div>
@@ -148,29 +162,26 @@ export function VariantForm({
             label="Stock"
             type="number"
             value={size.stock}
-            onChange={(e) =>
-              handleSizeFieldChange(
-                size.sizeAttributeValueId,
-                "stock",
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleStockChange(size.sizeAttributeValueId, e.target.value)}
             placeholder="Ej. 10"
+            min={0}
+            max={STOCK_MAX}
           />
 
-          <Input
-            label="Precio unitario"
-            type="number"
-            value={size.price}
-            onChange={(e) =>
-              handleSizeFieldChange(
-                size.sizeAttributeValueId,
-                "price",
-                e.target.value,
-              )
-            }
-            placeholder="$10.00"
-          />
+          <div className="flex flex-col gap-1 w-full">
+            <Input
+              label="Precio unitario"
+              type="text"
+              value={size.price ? `$ ${formatPrice(size.price)}` : ""}
+              onChange={(e) => handlePriceChange(size.sizeAttributeValueId, e.target.value)}
+              placeholder="$ 0"
+            />
+            {size.price && (
+              <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>
+                Máximo: $ {formatPrice(String(PRICE_MAX))}
+              </span>
+            )}
+          </div>
         </div>
       ))}
     </div>

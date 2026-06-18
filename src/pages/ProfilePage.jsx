@@ -94,8 +94,6 @@ function ProfileForm({ initialData }) {
       });
 
       setSavedData({ ...formData });
-
-      console.log("Datos guardados:", formData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -164,42 +162,6 @@ function ProfileForm({ initialData }) {
             </div>
           </form>
         </section>
-
-        {/* <hr className="border-tertiary mb-10" /> */}
-
-        {/* <section>
-          <div className="mb-8">
-            <h3>Seguridad</h3>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="border border-tertiary p-6 gap-16 flex items-center justify-between">
-              <div className="w-full">
-                <p>Email</p>
-                <span className="text-sm text-tertiary">
-                  Último cambio hace 3 meses
-                </span>
-              </div>
-
-              <Button fullWidth variant="outline">
-                Cambiar email
-              </Button>
-            </div>
-
-            <div className="border border-tertiary p-6 gap-16 flex items-center justify-between">
-              <div className="w-full">
-                <p>Contraseña</p>
-                <span className="text-sm text-tertiary">
-                  Último cambio hace 3 meses
-                </span>
-              </div>
-
-              <Button fullWidth variant="outline">
-                Restablecer contraseña
-              </Button>
-            </div>
-          </div>
-        </section> */}
       </div>
     </div>
   );

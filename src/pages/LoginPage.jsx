@@ -30,7 +30,7 @@ export function LoginPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       await login(form);
 
       navigate(from, { replace: true });

@@ -224,6 +224,7 @@ export function ExplorePage() {
                     <button
                       key={color.code}
                       type="button"
+                      title={color.value}
                       onClick={() => toggleColor(color)}
                       className={`w-6 h-6 border-2 transition-all ${
                         isSelected

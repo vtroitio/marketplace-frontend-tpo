@@ -313,7 +313,7 @@ export function Checkout() {
                       <img
                         src={item.image || "https://picsum.photos/id/26/50/50"}
                         alt={item.name}
-                        className="w-full h-full object-cover grayscale"
+                        className="w-full h-full object-cover"
                       />
                     </div>
 
