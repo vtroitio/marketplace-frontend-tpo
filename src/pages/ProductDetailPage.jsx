@@ -8,9 +8,7 @@ import { CartIcon, PencilIcon, StarIcon } from "../components/icons";
 import { getProductById } from "../api/products";
 import { getReviewsByProductId, createReview } from "../api/reviews";
 import { formatCurrency } from "../helpers/formatters";
-import { useAuth } from "../auth/AuthContext";
 import { ROLES } from "../helpers/roles";
-import { useToast } from "../toast/ToastContext";
 
 const ATTRIBUTES = {
   COLOR: "COLOR",
