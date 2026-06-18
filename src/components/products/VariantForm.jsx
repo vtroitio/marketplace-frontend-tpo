@@ -133,12 +133,15 @@ export function VariantForm({
               const isSelected = group.sizes.some(
                 (selectedSize) => selectedSize.sizeAttributeValueId === size.id,
               );
+
               return (
                 <Button
                   key={size.id}
                   type="button"
                   variant="selection"
-                  className={`${isSelected ? "bg-secondary! text-neutral!" : ""}`}
+                  className={`${
+                    isSelected ? "bg-secondary! text-neutral!" : ""
+                  }`}
                   onClick={() => toggleSize(size)}
                 >
                   {size.value}

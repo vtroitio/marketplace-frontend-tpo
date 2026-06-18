@@ -1,32 +1,64 @@
-import { getAccessToken, saveAccessToken, clearSession } from "../helpers/authStorage";
+import {
+  getAccessToken,
+  saveAccessToken,
+  clearSession,
+} from "../helpers/authStorage";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+let refreshPromise = null;
+
+function notifySessionExpired() {
+  window.dispatchEvent(new Event("auth:session-expired"));
+}
+
+async function parseResponse(response) {
+  if (response.status === 204) {
+    return null;
+  }
+
+  const contentType = response.headers.get("content-type");
+
+  if (contentType?.includes("application/json")) {
+    return response.json();
+  }
+
+  if (contentType?.includes("text/")) {
+    return response.text();
+  }
+
+  return null;
+}
 
 /**
  * Refreshes the access token by making a request to the backend. If successful, it saves the new token and returns it.
  *
  * @returns {Promise<string>} The new access token.
- * @throws {Error} I
+ * @throws {Error} If the token refresh fails.
  */
 async function refreshAccessToken() {
-  const response = await fetch(`${API_URL}/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-  });
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_URL}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(async (response) => {
+        const data = await parseResponse(response);
 
-  const contentType = response.headers.get("content-type");
+        if (!response.ok) {
+          throw new Error(data?.message || "No se pudo renovar la sesión");
+        }
 
-  const data = contentType?.includes("application/json")
-    ? await response.json()
-    : null;
+        saveAccessToken(data.accessToken);
 
-  if (!response.ok) {
-    throw new Error(data?.message || "No se pudo renovar la sesión");
+        return data.accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
   }
 
-  saveAccessToken(data.accessToken);
-
-  return data.accessToken;
+  return refreshPromise;
 }
 
 async function sendRequest(endpoint, options = {}, retry = true) {
@@ -49,18 +81,15 @@ async function sendRequest(endpoint, options = {}, retry = true) {
   };
 
   const response = await fetch(`${API_URL}${endpoint}`, config);
+  const data = await parseResponse(response);
 
-  const contentType = response.headers.get("content-type");
+  if (response.status === 401 && auth) {
+    if (!retry) {
+      clearSession();
+      notifySessionExpired();
+      throw new Error("Sesión expirada. Volvé a iniciar sesión.");
+    }
 
-  let data = null;
-
-  if (contentType?.includes("application/json")) {
-    data = await response.json();
-  } else if (contentType?.includes("text/")) {
-    data = await response.text();
-  }
-
-  if (response.status === 401 && auth && retry) {
     try {
       const newAccessToken = await refreshAccessToken();
 
@@ -77,6 +106,7 @@ async function sendRequest(endpoint, options = {}, retry = true) {
       );
     } catch (error) {
       clearSession();
+      notifySessionExpired();
       throw new Error("Sesión expirada. Volvé a iniciar sesión.");
     }
   }

@@ -48,7 +48,6 @@ export function SellerView() {
         setTotalElements(data?.totalElements || 0);
       } catch (error) {
         setError("Ocurrió un error al cargar tus productos");
-        console.error("Error fetching products:", error);
       } finally {
         setInitialLoading(false);
         setPageLoading(false);
@@ -68,7 +67,7 @@ export function SellerView() {
         prev.map((p) => p.id === productId ? { ...p, isActive: !p.isActive } : p)
       );
     } catch (error) {
-      console.error("Error al cambiar estado del producto:", error);
+      // error al cambiar estado
     }
   };
 
@@ -86,7 +85,7 @@ export function SellerView() {
         setRefreshKey((k) => k + 1);
       }
     } catch (error) {
-      console.error("Error al eliminar el producto:", error);
+      // error al eliminar
     }
   };
 

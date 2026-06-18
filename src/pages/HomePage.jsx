@@ -3,29 +3,83 @@ import { RightArrowIcon, CompassIcon } from "../components/icons";
 import heroImage from "../assets/home-hero.png";
 import hoodieImage from "../assets/product-hoodie.png";
 import tshirtImage from "../assets/product-tshirt.png";
+import { useAuth } from "../auth/AuthContext";
+import { hasRole, ROLES } from "../helpers/roles";
 
 const featuredProducts = [
   {
     id: 1,
     title: 'Hoodie Type-01 "Ghost"',
-    price: "$120.00",
+    price: 120,
     image: hoodieImage,
   },
   {
     id: 2,
     title: "T-Shirt Unit-02",
-    price: "$45.00",
+    price: 45,
     image: tshirtImage,
   },
   {
     id: 3,
     title: "T-Shirt Unit-02",
-    price: "$45.00",
+    price: 45,
     image: tshirtImage,
   },
 ];
 
+function BecomeSellerSection() {
+  return (
+    <section className="flex items-center justify-center bg-secondary px-6 py-20 text-center text-neutral">
+      <div className="mx-auto w-full max-w-4xl flex flex-col gap-4 items-center">
+        <CompassIcon size={44} className="text-primary" />
+
+        <h1>Crea tu legado. Únete como vendedor.</h1>
+
+        <div className="flex flex-col gap-17 max-w-xl">
+          <p>
+            Buscamos diseñadores que entiendan el poder del minimalismo.
+            Convierte tus visiones en vestimenta premium para una audiencia
+            global.
+          </p>
+
+          <Button to="/sell">Aplicar ahora</Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SellerDashboardSection() {
+  return (
+    <section className="flex items-center justify-center bg-secondary px-6 py-20 text-center text-neutral">
+      <div className="mx-auto w-full max-w-4xl flex flex-col gap-4 items-center">
+        <CompassIcon size={44} className="text-primary" />
+
+        <h1>Tu tienda, tu legado.</h1>
+
+        <div className="flex flex-col gap-8 max-w-xl">
+          <p>
+            Administrá tus productos, gestioná tu inventario y seguí el
+            crecimiento de tu marca dentro de Skindex.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button to="/sell">Ir a mi panel</Button>
+            <Button variant="inverted" to="/sell/create">
+              Publicar producto
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage() {
+  const { isAuthenticated, userRole } = useAuth();
+
+  const isSeller = isAuthenticated && hasRole(ROLES.SELLER, userRole);
+
   return (
     <div className="bg-neutral">
       <section
@@ -90,23 +144,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="flex items-center justify-center bg-secondary px-6 py-20 text-center text-neutral">
-        <div className="mx-auto w-full max-w-4xl flex flex-col gap-4 items-center">
-          <CompassIcon size={44} className="text-primary" />
-
-          <h1>Crea tu legado. Únete como vendedor.</h1>
-
-          <div className="flex flex-col gap-17 max-w-xl">
-            <p>
-              Buscamos diseñadores que entiendan el poder del minimalismo.
-              Convierte tus visiones en vestimenta premium para una audiencia
-              global.
-            </p>
-
-            <Button to="/sell">Aplicar ahora</Button>
-          </div>
-        </div>
-      </section>
+      {isSeller ? <SellerDashboardSection /> : <BecomeSellerSection />}
     </div>
   );
 }

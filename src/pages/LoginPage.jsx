@@ -1,21 +1,15 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { login } from "../api/auth";
-import { getProfile } from "../api/users";
-import {
-  saveAccessToken,
-  saveUserRole,
-  isAuthenticated,
-} from "../helpers/authStorage";
+import { useAuth } from "../auth/AuthContext";
 import { AppLink, Button, Input } from "../components/ui";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from
-    ? location.state.from.pathname + location.state.from.search
-    : "/";
+  const { isAuthenticated, login } = useAuth();
+
+  const from = location.state?.from || "/";
 
   const [form, setForm] = useState({
     email: "",
@@ -25,7 +19,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  if (isAuthenticated()) {
+  if (isAuthenticated) {
     return <Navigate to={from} replace />;
   }
 
@@ -36,11 +30,7 @@ export function LoginPage() {
       setLoading(true);
       setError(null);
 
-      const data = await login(form);
-      saveAccessToken(data.accessToken);
-
-      const user = await getProfile();
-      saveUserRole(user.role.code);
+      await login(form);
 
       navigate(from, { replace: true });
     } catch (err) {

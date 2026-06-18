@@ -1,3 +1,5 @@
+import { jwtDecode } from "jwt-decode";
+
 /**
  * Retrieves the access token from localStorage for authenticated requests.
  *
@@ -5,6 +7,19 @@
  */
 export function getAccessToken() {
   return localStorage.getItem("accessToken");
+}
+
+export function getAccessTokenPayload(accessToken = getAccessToken()) {
+  if (!accessToken) {
+    return null;
+  }
+
+  try {
+    return jwtDecode(accessToken);
+  } catch (error) {
+    console.error("Error decoding access token:", error);
+    return null;
+  }
 }
 
 /**
@@ -27,22 +42,10 @@ export function saveAccessToken(accessToken) {
 }
 
 /**
- * Saves the user's role to localStorage.
- *
- * @param {string} userRole
- * @returns {void}
+ * Saves the user's session information, including the access token and user role, to localStorage.
  */
-export function saveUserRole(userRole) {
-  localStorage.setItem("userRole", userRole);
-}
-
-/**
- * Retrieves the user's role from localStorage.
- *
- * @returns {string | null} User's role or null if not found.
- */
-export function getUserRole() {
-  return localStorage.getItem("userRole");
+export function saveSession({ accessToken }) {
+  saveAccessToken(accessToken);
 }
 
 /**
@@ -51,6 +54,5 @@ export function getUserRole() {
  * @returns {void}
  */
 export function clearSession() {
-  localStorage.removeItem("userRole");
   localStorage.removeItem("accessToken");
 }

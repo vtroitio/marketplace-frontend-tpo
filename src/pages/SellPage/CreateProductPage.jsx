@@ -104,7 +104,7 @@ export function CreateProductPage() {
       <div className="pb-4 border-b border-secondary">
         <AppLink to="/sell">
           <LeftArrowIcon />
-          <span>Volver</span>
+          <span>Ir al panel de venta</span>
         </AppLink>
         <h2>Publicar Nueva Prenda</h2>
       </div>
