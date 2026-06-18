@@ -53,11 +53,11 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral flex items-center justify-center px-4 py-12">
-      <div className="grid w-full max-w-full grid-cols-1 overflow-hidden rounded-[32px] border border-secondary bg-white text-black shadow-sm lg:w-[1280px] lg:h-[1105px] lg:grid-cols-[640px_640px]">
+    <div className="w-full h-screen bg-neutral">
+      <div className="grid w-full h-screen grid-cols-1 overflow-hidden bg-white text-black lg:grid-cols-[1200px_1fr]">
         <div className="hidden lg:block bg-[#fafafa]" />
 
-        <div className="flex items-center justify-center px-8 py-20 sm:px-16">
+        <div className="flex items-center justify-end px-8 py-20 sm:px-16">
           <div className="w-full max-w-[560px] space-y-10">
             <div className="space-y-4">
               <AppLink to="/" variant="text">
