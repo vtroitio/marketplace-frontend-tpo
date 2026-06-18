@@ -3,7 +3,7 @@ import { useAuth } from "../auth/AuthContext";
 
 export function RoleProtectedRoute({ children, allowedRoles }) {
   const location = useLocation();
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
 
   if (!isAuthenticated) {
     return (
@@ -15,7 +15,7 @@ export function RoleProtectedRoute({ children, allowedRoles }) {
     );
   }
 
-  if (!allowedRoles.includes(userRole)) {
+  if (!allowedRoles.includes(currentUser?.role.code)) {
     return <Navigate to="/" replace />;
   }
 
