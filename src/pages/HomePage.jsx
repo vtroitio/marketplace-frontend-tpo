@@ -85,10 +85,12 @@ export function HomePage() {
       <section
         className="h-230 relative flex items-center justify-center overflow-hidden border-secondary bg-neutral px-6 py-16 text-center"
         style={{
+          /* Aplicamos el gris hexadecimal seleccionado */
+          backgroundColor: "#5f5e5e", 
           backgroundImage: `linear-gradient(rgba(250,250,250,0.12), rgba(250,250,250,0.12)), url(${TitanImage})`,
-          backgroundPosition: "center, center bottom",
+          backgroundPosition: "center center, center bottom",
           backgroundRepeat: "no-repeat, no-repeat",
-          backgroundSize: "auto 108%, auto 108%, cover",
+          backgroundSize: "cover, auto 100%",
         }}
       >
         <div className="mx-auto w-full max-w-4xl">
