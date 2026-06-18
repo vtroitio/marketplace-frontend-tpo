@@ -299,7 +299,7 @@ export function ProductDetailPage() {
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
-  const canReview = isAuthenticated && userRole === ROLES.BUYER;
+  const canReview = isAuthenticated && currentUser?.role === ROLES.BUYER;
 
   useEffect(() => {
     const fetchProduct = async () => {
