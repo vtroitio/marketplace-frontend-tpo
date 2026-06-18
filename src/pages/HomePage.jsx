@@ -1,6 +1,6 @@
 import { Card, AppLink, Button } from "../components/ui";
 import { RightArrowIcon, CompassIcon } from "../components/icons";
-import heroImage from "../assets/home-hero.png";
+import TitanImage from "../assets/home-titan.png";
 import hoodieImage from "../assets/product-hoodie.png";
 import tshirtImage from "../assets/product-tshirt.png";
 import { useAuth } from "../auth/AuthContext";
@@ -83,11 +83,11 @@ export function HomePage() {
   return (
     <div className="bg-neutral">
       <section
-        className="h-230 relative flex items-center justify-center overflow-hidden border-b border-secondary bg-neutral px-6 py-16 text-center"
+        className="h-230 relative flex items-center justify-center overflow-hidden border-secondary bg-neutral px-6 py-16 text-center"
         style={{
-          backgroundImage: `linear-gradient(rgba(250,250,250,0.12), rgba(250,250,250,0.12)), url(${heroImage}), url(${heroImage})`,
-          backgroundPosition: "center top, center top, center center",
-          backgroundRepeat: "no-repeat, no-repeat, no-repeat",
+          backgroundImage: `linear-gradient(rgba(250,250,250,0.12), rgba(250,250,250,0.12)), url(${TitanImage})`,
+          backgroundPosition: "center, center bottom",
+          backgroundRepeat: "no-repeat, no-repeat",
           backgroundSize: "auto 108%, auto 108%, cover",
         }}
       >

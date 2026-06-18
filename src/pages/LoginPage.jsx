@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { AppLink, Button, Input } from "../components/ui";
+import ryukImage from "../assets/login-ryuk.png";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -41,14 +42,21 @@ export function LoginPage() {
   };
 
   return (
-    <div className="w-full h-screen bg-neutral">
-      <div className="grid w-full h-screen grid-cols-1 overflow-hidden bg-white text-black lg:grid-cols-[1200px_1fr]">
-        <div className="hidden lg:block bg-[#fafafa]" />
+    <div className="w-full min-h-screen bg-neutral">
+      <div className="grid w-full min-h-screen grid-cols-1 bg-white text-black lg:grid-cols-[45%_55%] xl:grid-cols-[50%_50%]">
+        
+        <div className="hidden lg:flex w-full h-full bg-[#fafafa]">
+          <img 
+            src={ryukImage} 
+            alt="Ryuk" 
+            className="w-full h-full object-cover" 
+          />
+        </div>
 
-        <div className="flex items-center justify-end px-8 py-20 sm:px-16">
-          <div className="w-full max-w-[560px] space-y-12">
+        <div className="flex items-center justify-center p-6 sm:p-10 md:p-16 lg:p-20">
+          <div className="w-full max-w-[480px] sm:max-w-[560px] space-y-10 md:space-y-12">
             <div className="space-y-4">
-              <div>
+              <div className="text-center lg:text-left">
                 <h1>SKINDEX</h1>
                 <div className="mt-3 text-sm uppercase tracking-[1.2px] text-secondary">
                   <p>Moda Geek Elevada</p>
@@ -56,7 +64,7 @@ export function LoginPage() {
               </div>
             </div>
 
-            <form className="space-y-6 max-w-[436px]" onSubmit={handleSubmit}>
+            <form className="space-y-5 md:space-y-6 w-full" onSubmit={handleSubmit}>
               <Input
                 label="Email"
                 type="email"
@@ -80,6 +88,7 @@ export function LoginPage() {
               </Button>
               <p className="min-h-6 text-primary text-center">{error}</p>
             </form>
+            
             <div className="text-center text-xs uppercase tracking-[1.2px] text-secondary">
               <p>
                 ¿No tienes cuenta?{" "}
