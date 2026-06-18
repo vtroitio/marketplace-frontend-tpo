@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import { LeftArrowIcon } from "../components/icons";
 import { useAuth } from "../auth/AuthContext";
 import { AppLink, Button, Input } from "../components/ui";
+import RyukLight from "../assets/register-ryuklight.png";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -53,18 +54,26 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="w-full h-screen bg-neutral">
-      <div className="grid w-full h-screen grid-cols-1 overflow-hidden bg-white text-black lg:grid-cols-[1200px_1fr]">
-        <div className="hidden lg:block bg-[#fafafa]" />
+    <div className="w-full min-h-screen bg-neutral">
+      <div className="grid w-full min-h-screen grid-cols-1 bg-white text-black lg:grid-cols-[45%_55%] xl:grid-cols-[50%_50%]">
+        
+        <div className="hidden lg:flex w-full h-full bg-[#fafafa]">
+          <img 
+            src={RyukLight} 
+            alt="Ryuk & Light" 
+            className="w-full h-full object-cover" 
+          />
+        </div>
 
-        <div className="flex items-center justify-end px-8 py-20 sm:px-16">
-          <div className="w-full max-w-[560px] space-y-10">
+        {/* Panel Derecho: Formulario */}
+        <div className="flex items-center justify-center p-6 sm:p-10 md:p-16 lg:p-20">
+          <div className="w-full max-w-[480px] sm:max-w-[560px] space-y-8 md:space-y-10">
             <div className="space-y-4">
               <AppLink to="/" variant="text">
                 <LeftArrowIcon />
                 <span>Volver al inicio</span>
               </AppLink>
-              <div className="space-y-3">
+              <div className="space-y-3 text-center lg:text-left">
                 <h1>Crear Cuenta</h1>
                 <div className="text-sm uppercase tracking-[1.2px] text-secondary">
                   <p>Proporcione los datos solicitados.</p>
@@ -72,7 +81,7 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-5 md:space-y-6 w-full max-w-full" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="Nombre"
