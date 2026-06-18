@@ -72,7 +72,7 @@ export function EditProductPage() {
     <section className="container mx-auto py-32 ">
       <AppLink to="/sell">
         <LeftArrowIcon />
-        <span>Volver</span>
+        <span>Ir al panel de venta</span>
       </AppLink>
       <div className="border-b border-secondary pb-4">
         <h2>Editar Prenda</h2>

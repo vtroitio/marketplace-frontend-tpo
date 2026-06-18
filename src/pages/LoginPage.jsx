@@ -10,9 +10,7 @@ export function LoginPage() {
 
   const { isAuthenticated, login } = useAuth();
 
-  const from = location.state?.from
-    ? location.state.from.pathname + location.state.from.search
-    : "/";
+  const from = location.state?.from || "/";
 
   const [form, setForm] = useState({
     email: "",

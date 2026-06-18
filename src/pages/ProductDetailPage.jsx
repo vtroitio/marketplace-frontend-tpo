@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { useCart } from "../cart/CartContext";
+import { useToast } from "../toast/ToastContext";
 import { Button, Spinner } from "../components/ui";
-import { CartIcon, StarIcon } from "../components/icons";
+import { CartIcon, PencilIcon, StarIcon } from "../components/icons";
 import { getProductById } from "../api/products";
 import { getReviewsByProductId, createReview } from "../api/reviews";
 import { formatCurrency } from "../helpers/formatters";
-import { useAuth } from "../auth/AuthContext";
 import { ROLES } from "../helpers/roles";
-import { useToast } from "../toast/ToastContext";
 
 const ATTRIBUTES = {
   COLOR: "COLOR",
@@ -279,7 +280,8 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
 
 export function ProductDetailPage() {
   const { productId } = useParams();
-  const { isAuthenticated, userRole } = useAuth();
+  const { currentUser, authLoading, isAuthenticated } = useAuth();
+  const { addItem } = useCart();
   const toast = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -289,6 +291,7 @@ export function ProductDetailPage() {
   const [selectedColorId, setSelectedColorId] = useState(null);
   const [selectedSizeId, setSelectedSizeId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
 
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -296,7 +299,7 @@ export function ProductDetailPage() {
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
-  const canReview = isAuthenticated && userRole === ROLES.BUYER;
+  const canReview = isAuthenticated && currentUser?.role === ROLES.BUYER;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -316,6 +319,7 @@ export function ProductDetailPage() {
         setSelectedColorId(firstColor?.id ?? null);
         setSelectedSizeId(firstSize?.id ?? null);
         setSelectedImage(firstImage);
+        setIsOwner(data.owner.id === currentUser?.id);
       } catch (error) {
         console.error("Error fetching product details:", error);
         setError(error);
@@ -325,7 +329,7 @@ export function ProductDetailPage() {
     };
 
     fetchProduct();
-  }, [productId]);
+  }, [productId, currentUser]);
 
   async function fetchReviews() {
     try {
@@ -374,6 +378,10 @@ export function ProductDetailPage() {
     );
   }, [product, selectedColorId, selectedSizeId]);
 
+  const selectedSize = useMemo(() => {
+    return availableSizes.find((size) => size.id === selectedSizeId) ?? null;
+  }, [availableSizes, selectedSizeId]);
+
   const selectedColor = useMemo(() => {
     return colors.find((color) => color.id === selectedColorId) ?? null;
   }, [colors, selectedColorId]);
@@ -407,17 +415,37 @@ export function ProductDetailPage() {
     setSelectedSizeId(firstSize?.id ?? null);
   }
 
-  function handleAddToCart() {
-    if (!selectedVariant) return;
-    console.log("Agregar al carrito:", {
+  const handleAddToCart = async () => {
+    const result = await addItem({
+      id: selectedVariant.id,
       productId: product.id,
-      variantId: selectedVariant.id,
-      sku: selectedVariant.sku,
+      name: product.name,
+      size: selectedSize,
+      color: selectedColor,
+      price: selectedVariant.price,
       quantity: 1,
+      maxStock: selectedVariant.stock,
+      image: product.coverImagePath,
     });
-  }
 
-  if (loading) {
+    if (!result.ok) {
+      if (result.status === "STOCK_LIMIT") {
+        toast.error(result.message, {
+          title: "Limite de stock alcanzado",
+          duration: 3500,
+        });
+      }
+      return;
+    }
+
+    toast.success(result.message, {
+      title: "¡Éxito!",
+      duration: 3500,
+
+    });
+  };
+
+  if (loading || authLoading) {
     return (
       <div className="bg-neutral min-h-screen flex items-center justify-center">
         <Spinner />
@@ -572,14 +600,25 @@ export function ProductDetailPage() {
               </div>
             </div>
 
-            <Button
-              fullWidth
-              disabled={!selectedVariant || selectedVariant.stock <= 0}
-              onClick={handleAddToCart}
-            >
-              <CartIcon size={18} />
-              {selectedVariant?.stock > 0 ? "Añadir al carrito" : "Sin stock"}
-            </Button>
+            {!isOwner ? (
+              <Button
+                fullWidth
+                disabled={!selectedVariant || selectedVariant.stock <= 0}
+                onClick={handleAddToCart}
+              >
+                <CartIcon size={18} />
+                {selectedVariant?.stock > 0 ? "Añadir al carrito" : "Sin stock"}
+              </Button>
+            ) : (
+              <Button
+                to={`/sell/edit/${product.id}`}
+                fullWidth
+                variant="outline"
+              >
+                <PencilIcon size={18} />
+                Editar producto
+              </Button>
+            )}
           </div>
         </div>
 
