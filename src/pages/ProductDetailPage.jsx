@@ -6,7 +6,11 @@ import { useToast } from "../toast/ToastContext";
 import { Button, Spinner } from "../components/ui";
 import { CartIcon, PencilIcon, StarIcon } from "../components/icons";
 import { getProductById } from "../api/products";
+import { getReviewsByProductId, createReview } from "../api/reviews";
 import { formatCurrency } from "../helpers/formatters";
+import { useAuth } from "../auth/AuthContext";
+import { ROLES } from "../helpers/roles";
+import { useToast } from "../toast/ToastContext";
 
 const ATTRIBUTES = {
   COLOR: "COLOR",
@@ -31,32 +35,25 @@ function getSize(variant) {
 
 function getUniqueColors(variants = []) {
   const colorsMap = new Map();
-
   variants.forEach((variant) => {
     const color = getColor(variant);
-
     if (color && !colorsMap.has(color.id)) {
       colorsMap.set(color.id, color);
     }
   });
-
   return Array.from(colorsMap.values());
 }
 
 function getSizesByColor(variants = [], selectedColorId) {
   if (!selectedColorId) return [];
-
   const sizesMap = new Map();
-
   variants.forEach((variant) => {
     const color = getColor(variant);
     const size = getSize(variant);
-
     if (color?.id === selectedColorId && size && !sizesMap.has(size.id)) {
       sizesMap.set(size.id, size);
     }
   });
-
   return Array.from(sizesMap.values());
 }
 
@@ -66,12 +63,10 @@ function findVariantByColorAndSize(
   selectedSizeId,
 ) {
   if (!selectedColorId || !selectedSizeId) return null;
-
   return (
     variants.find((variant) => {
       const color = getColor(variant);
       const size = getSize(variant);
-
       return color?.id === selectedColorId && size?.id === selectedSizeId;
     }) ?? null
   );
@@ -79,27 +74,215 @@ function findVariantByColorAndSize(
 
 function getImagesByColor(variants = [], selectedColorId) {
   if (!selectedColorId) return [];
-
   const imagesMap = new Map();
-
   variants.forEach((variant) => {
     const color = getColor(variant);
-
     if (color?.id !== selectedColorId) return;
-
     variant.images?.forEach((image) => {
       if (!imagesMap.has(image.id)) {
         imagesMap.set(image.id, image);
       }
     });
   });
-
   return Array.from(imagesMap.values()).sort((a, b) => a.position - b.position);
+}
+
+function SizeGuideModal({ onClose }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-neutral border border-secondary max-w-lg w-full p-8 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-tertiary hover:text-primary text-xl leading-none cursor-pointer"
+          aria-label="Cerrar guía de tallas"
+        >
+          ✕
+        </button>
+
+        <h3 className="mb-6">Guía de Tallas</h3>
+
+        <p className="text-sm text-tertiary mb-4">
+          Medidas en centímetros. Para una mejor experiencia, medí tu cuerpo y
+          compará con la tabla.
+        </p>
+
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-secondary/40">
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
+                Talla
+              </th>
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
+                Pecho (cm)
+              </th>
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
+                Cintura (cm)
+              </th>
+              <th className="text-left py-2 font-bold uppercase tracking-[1.2px] text-xs">
+                Largo (cm)
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { size: "XS", chest: "84–88", waist: "68–72", length: "65" },
+              { size: "S", chest: "88–92", waist: "72–76", length: "67" },
+              { size: "M", chest: "92–96", waist: "76–80", length: "69" },
+              { size: "L", chest: "96–102", waist: "80–86", length: "71" },
+              { size: "XL", chest: "102–108", waist: "86–92", length: "73" },
+              { size: "XXL", chest: "108–116", waist: "92–100", length: "75" },
+            ].map((row) => (
+              <tr key={row.size} className="border-b border-secondary/20">
+                <td className="py-2 pr-4 font-bold">{row.size}</td>
+                <td className="py-2 pr-4 text-tertiary">{row.chest}</td>
+                <td className="py-2 pr-4 text-tertiary">{row.waist}</td>
+                <td className="py-2 text-tertiary">{row.length}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p className="text-xs text-tertiary mt-6">
+          * Las medidas pueden variar ±1 cm según la prenda. En caso de duda,
+          recomendamos elegir la talla superior.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ReviewModal({ productId, onClose, onReviewCreated }) {
+  const toast = useToast();
+
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    if (rating === 0) {
+      toast.warning("Por favor seleccioná una puntuación.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await createReview(productId, { rating, title, description });
+      toast.success("¡Reseña publicada correctamente!", {
+        title: "Reseña enviada",
+      });
+      onReviewCreated();
+      onClose();
+    } catch (error) {
+      toast.error(error.message || "No se pudo publicar la reseña.", {
+        title: "Error",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-neutral border border-secondary max-w-lg w-full p-8 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-tertiary hover:text-primary text-xl leading-none cursor-pointer"
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
+
+        <h3 className="mb-6">Escribir reseña</h3>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-[1.2px]">
+              Puntuación (1–10)
+            </span>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  className={`text-lg leading-none transition-colors ${
+                    star <= (hoveredRating || rating)
+                      ? "text-primary"
+                      : "text-secondary"
+                  }`}
+                  onMouseEnter={() => setHoveredRating(star)}
+                  onMouseLeave={() => setHoveredRating(0)}
+                  onClick={() => setRating(star)}
+                  aria-label={`${star} puntos`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            {rating > 0 && (
+              <p className="text-xs text-tertiary">{rating} / 10</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold uppercase tracking-[1.2px] block">
+              Título
+            </label>
+            <input
+              type="text"
+              required
+              maxLength={100}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Resumen de tu experiencia"
+              className="w-full border border-secondary bg-transparent px-4 py-3 text-sm text-secondary placeholder:text-tertiary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold uppercase tracking-[1.2px] block">
+              Comentario
+            </label>
+            <textarea
+              required
+              maxLength={500}
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Contanos tu experiencia con el producto..."
+              className="w-full border border-secondary bg-transparent px-4 py-3 text-sm text-secondary placeholder:text-tertiary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+            />
+          </div>
+
+          <Button type="submit" fullWidth disabled={submitting}>
+            {submitting ? "Publicando..." : "Publicar reseña"}
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 export function ProductDetailPage() {
   const { productId } = useParams();
-  const { currentUser, authLoading } = useAuth();
+  const { currentUser, authLoading, isAuthenticated } = useAuth();
   const { addItem } = useCart();
   const toast = useToast();
 
@@ -111,6 +294,14 @@ export function ProductDetailPage() {
   const [selectedSizeId, setSelectedSizeId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
+
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+
+  const canReview = isAuthenticated && userRole === ROLES.BUYER;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -141,6 +332,37 @@ export function ProductDetailPage() {
 
     fetchProduct();
   }, [productId, currentUser]);
+
+  async function fetchReviews() {
+    try {
+      setReviewsLoading(true);
+      const data = await getReviewsByProductId(productId);
+      setReviews(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+      toast.error("No se pudieron cargar las reseñas.", { title: "Error" });
+    } finally {
+      setReviewsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setReviewsLoading(true);
+        const data = await getReviewsByProductId(productId);
+        setReviews(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+        toast.error("No se pudieron cargar las reseñas.");
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]); // La dependencia de productId es correcta aquí
 
   const colors = useMemo(() => {
     return getUniqueColors(product?.variants ?? []);
@@ -174,32 +396,24 @@ export function ProductDetailPage() {
     ? selectedVariant.images
     : selectedColorImages;
 
-  const reviews = product?.reviews ?? [];
-  const rating = product?.rating ?? 0;
-  const reviewCount = product?.reviewCount ?? reviews.length;
+  const rating = useMemo(() => {
+    if (reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, r) => acc + (r.rating ?? 0), 0);
+    return Math.round((sum / reviews.length) * 10) / 10;
+  }, [reviews]);
 
-  useEffect(() => {
-    if (selectedVariant?.images?.[0]?.path) {
-      setSelectedImage(selectedVariant.images[0].path);
-      return;
-    }
-
-    if (selectedColorImages?.[0]?.path) {
-      setSelectedImage(selectedColorImages[0].path);
-      return;
-    }
-
-    if (product?.coverImagePath) {
-      setSelectedImage(product.coverImagePath);
-    }
+  const displayedImage = useMemo(() => {
+    return (
+      selectedVariant?.images?.[0]?.path ??
+      selectedColorImages?.[0]?.path ??
+      product?.coverImagePath
+    );
   }, [selectedVariant, selectedColorImages, product]);
 
   function handleColorSelect(colorId) {
     setSelectedColorId(colorId);
-
     const sizesForColor = getSizesByColor(product?.variants ?? [], colorId);
     const firstSize = sizesForColor[0] ?? null;
-
     setSelectedSizeId(firstSize?.id ?? null);
   }
 
@@ -259,12 +473,23 @@ export function ProductDetailPage() {
 
   return (
     <div className="bg-neutral min-h-screen">
+      {showSizeGuide && (
+        <SizeGuideModal onClose={() => setShowSizeGuide(false)} />
+      )}
+      {showReviewModal && (
+        <ReviewModal
+          productId={productId}
+          onClose={() => setShowReviewModal(false)}
+          onReviewCreated={fetchReviews}
+        />
+      )}
+
       <div className="mx-auto max-w-295 px-8 py-12 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           <div className="space-y-4">
             <div className="border border-secondary overflow-hidden aspect-square">
               <img
-                src={selectedImage ?? product.coverImagePath}
+                src={displayedImage}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -310,13 +535,11 @@ export function ProductDetailPage() {
             <hr className="border-secondary/20" />
 
             <p>{product.description}</p>
-
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="text-sm font-bold uppercase tracking-[1.2px]">
                   Color
                 </div>
-
                 <div className="text-sm text-tertiary">
                   {selectedColor?.value ?? "Seleccionar"}
                 </div>
@@ -325,7 +548,6 @@ export function ProductDetailPage() {
               <div className="flex gap-3">
                 {colors.map((color) => {
                   const isSelected = selectedColorId === color.id;
-
                   return (
                     <button
                       key={color.id}
@@ -350,15 +572,18 @@ export function ProductDetailPage() {
                   Talla
                 </div>
 
-                <div className="text-sm font-bold uppercase tracking-[1.2px] text-primary underline cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setShowSizeGuide(true)}
+                  className="text-sm font-bold uppercase tracking-[1.2px] text-primary underline cursor-pointer hover:opacity-70 transition-opacity"
+                >
                   Guía de tallas
-                </div>
+                </button>
               </div>
 
               <div className="flex gap-3">
                 {availableSizes.map((size) => {
                   const isSelected = selectedSizeId === size.id;
-
                   return (
                     <button
                       key={size.id}
@@ -408,29 +633,50 @@ export function ProductDetailPage() {
                 <h3>Reseñas</h3>
               </div>
 
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <StarIcon
-                    key={star}
-                    size={16}
-                    className={
-                      star <= Math.round(rating)
-                        ? "text-primary"
-                        : "text-tertiary"
-                    }
-                  />
-                ))}
-
-                <div className="text-sm text-tertiary ml-1">
-                  {rating} ({reviewCount} reseñas)
+              {reviews.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <StarIcon
+                      key={star}
+                      size={16}
+                      className={
+                        star <= Math.round(rating / 2)
+                          ? "text-primary"
+                          : "text-tertiary"
+                      }
+                    />
+                  ))}
+                  <div className="text-sm text-tertiary ml-1">
+                    {rating}/10 ({reviews.length} reseña
+                    {reviews.length !== 1 ? "s" : ""})
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
-            <Button variant="outline">Escribir reseña</Button>
+            {canReview ? (
+              <Button
+                variant="outline"
+                onClick={() => setShowReviewModal(true)}
+              >
+                Escribir reseña
+              </Button>
+            ) : isAuthenticated && !canReview ? (
+              <span className="text-xs text-tertiary uppercase tracking-[1.2px]">
+                Solo compradores pueden reseñar
+              </span>
+            ) : (
+              <Button variant="outline" to="/login">
+                Iniciar sesión para reseñar
+              </Button>
+            )}
           </div>
 
-          {reviews.length > 0 ? (
+          {reviewsLoading ? (
+            <div className="flex justify-center py-8">
+              <Spinner />
+            </div>
+          ) : reviews.length > 0 ? (
             <div className="space-y-8">
               {reviews.map((review) => (
                 <div
@@ -443,33 +689,37 @@ export function ProductDetailPage() {
                         key={star}
                         size={14}
                         className={
-                          star <= review.rating
+                          star <= Math.round(review.rating / 2)
                             ? "text-primary"
                             : "text-tertiary"
                         }
                       />
                     ))}
+                    <span className="text-xs text-tertiary ml-1">
+                      {review.rating}/10
+                    </span>
                   </div>
 
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-sm font-bold uppercase tracking-[1.2px]">
-                      {review.author}
-                    </div>
-
-                    <div className="text-sm text-tertiary">{review.date}</div>
+                  <div className="text-sm font-bold uppercase tracking-[1.2px] mb-2">
+                    {review.title}
                   </div>
 
-                  <p>{review.comment}</p>
+                  <p className="text-sm text-tertiary">{review.description}</p>
                 </div>
               ))}
-
-              <div className="mt-8 text-center">
-                <Button variant="text">Ver todas las reseñas</Button>
-              </div>
             </div>
           ) : (
             <div className="text-tertiary">
-              Este producto todavía no tiene reseñas.
+              Este producto todavía no tiene reseñas.{" "}
+              {canReview && (
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(true)}
+                  className="text-primary underline cursor-pointer hover:opacity-70"
+                >
+                  ¡Sé el primero en opinar!
+                </button>
+              )}
             </div>
           )}
         </div>
