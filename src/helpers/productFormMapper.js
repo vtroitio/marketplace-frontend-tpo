@@ -76,7 +76,7 @@ export function groupVariantsByColor(variants = [], coverImagePath = null) {
     const group = groups.get(color.id);
 
     group.images = getUniqueImages(
-      [...group.images, ...(variant.images ?? [])],
+      [...group.images, ...(variant.images ?? []).map((img) => ({ ...img, variantId: variant.id }))],
       coverImagePath,
     );
 

@@ -132,3 +132,18 @@ export function setCoverImage(productId, imageId) {
     auth: true,
   });
 }
+
+export function deleteVariantImage(productId, variantId, imageId) {
+  return request(`/products/${productId}/variants/${variantId}/images/${imageId}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
+export function reorderVariantImages(productId, variantId, imageIds) {
+  return request(`/products/${productId}/variants/${variantId}/images/reorder`, {
+    method: "PATCH",
+    auth: true,
+    body: imageIds,
+  });
+}

@@ -36,10 +36,11 @@ export function ImageUploader({ images = [], onChange, maxImages = 4 }) {
     onChange(nextImages);
   };
 
-  const moveToFirst = (index) => {
+  const moveImage = (index, direction) => {
     const nextImages = [...images];
-    const [moved] = nextImages.splice(index, 1);
-    nextImages.unshift(moved);
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= nextImages.length) return;
+    [nextImages[index], nextImages[targetIndex]] = [nextImages[targetIndex], nextImages[index]];
     onChange(nextImages);
   };
 
@@ -71,25 +72,35 @@ export function ImageUploader({ images = [], onChange, maxImages = 4 }) {
                       <span style={{ color: "white", fontSize: "0.7rem" }}>PORTADA</span>
                     </div>
                   )}
-                  {index > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => moveToFirst(index)}
-                      title="Hacer portada"
-                      className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <span style={{ fontSize: "0.65rem", background: "rgba(0,0,0,0.6)", color: "white", padding: "2px 4px" }}>
-                        Hacer portada
-                      </span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <TrashIcon />
-                  </button>
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="bg-black/60 p-1 rounded"
+                      >
+                        <TrashIcon size={14} color="white" />
+                      </button>
+                    </div>
+                    <div className="flex justify-between">
+                      <button
+                        type="button"
+                        onClick={() => moveImage(index, -1)}
+                        disabled={index === 0}
+                        className={`bg-black/60 text-white text-base leading-none px-2 py-0.5 rounded ${index === 0 ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveImage(index, 1)}
+                        disabled={index === images.length - 1}
+                        className={`bg-black/60 text-white text-base leading-none px-2 py-0.5 rounded ${index === images.length - 1 ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
                 </>
               ) : (
                 <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer gap-2">

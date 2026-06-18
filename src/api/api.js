@@ -112,7 +112,9 @@ async function sendRequest(endpoint, options = {}, retry = true) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.message || data || "Error en la petición");
+    const error = new Error(data?.message || data || "Error en la petición");
+    error.errors = data?.errors || null;
+    throw error;
   }
 
   return data;
