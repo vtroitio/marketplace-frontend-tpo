@@ -1,125 +1,140 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { AppLink } from "../components/ui/AppLink";
+import { useCart } from "../cart/CartContext";
+import { useToast } from "../toast/ToastContext";
+import { useAuth } from "../auth/AuthContext";
+import { formatCurrency } from "../helpers/formatters";
 
 export function Cart() {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "K-DA AKALI ANORAK",
-      size: "L",
-      color: "Obsidian",
-      price: 180.0,
-      quantity: 1,
-      maxStock: 5,
-      image: "",
-    },
-    {
-      id: 2,
-      name: "PROJECT: VAYNE KICKS",
-      size: "42",
-      color: "Chrome",
-      price: 220.0,
-      quantity: 1,
-      maxStock: 3,
-      image: "",
-    },
-  ]);
+  const navigate = useNavigate();
+  const toast = useToast();
+  const {
+    cartItems,
+    totalArticles,
+    subtotal,
+    increaseItem,
+    decreaseItem,
+    removeItem,
+    cartLoading,
+    cartError,
+  } = useCart();
+  const leftColClass = cartItems.length === 0 ? "lg:col-span-3" : "lg:col-span-2";
+  const { isAuthenticated, authLoading } = useAuth();
 
   const shippingCost = 15.0;
-
-  const handleIncrease = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.id === id) {
-          if (item.quantity >= item.maxStock) {
-            alert(`Lo sentimos, no hay más stock disponible de ${item.name}.`);
-            return item;
-          }
-          return { ...item, quantity: item.quantity + 1 };
-        }
-        return item;
-      }),
-    );
-  };
-
-  const handleDecrease = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.id === id && item.quantity > 1) {
-          return { ...item, quantity: item.quantity - 1 };
-        }
-        return item;
-      }),
-    );
-  };
-
-  const handleRemove = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-  };
-
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0,
-  );
   const total = subtotal > 0 ? subtotal + shippingCost : 0;
-  const totalArticles = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  const handleIncrease = async (item) => {
+    const result = await increaseItem(item.id);
+    if (!result.ok) {
+      toast.error(result.message, {
+        title: "No se pudo aumentar la cantidad",
+      });
+      return;
+    }
+  };
+
+  const handleContinueToCheckout = () => {
+    if (authLoading) return;
+
+    if (cartItems.length === 0) {
+      toast.warning("Tu carrito está vacío.", {
+        title: "Carrito vacío",
+      });
+      return;
+    }
+
+    if (!isAuthenticated) {
+      toast.info("Iniciá sesión para continuar con la compra.", {
+        title: "Autenticación requerida",
+      });
+
+      navigate("/login", {
+        state: {
+          from: "/checkout",
+        },
+      });
+
+      return;
+    }
+
+    navigate("/checkout");
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 bg-white text-black font-sans">
-
-      <div className="flex justify-between items-baseline border-b border-black pb-3 mb-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 bg-natural text-secondary">
+      <div className="flex justify-between items-baseline border-b border-secondary pb-3 mb-12">
         <h2>Tu Compra</h2>
-        <div className="text-xs uppercase font-bold tracking-wider text-gray-400">
+
+        <div className="text-xs uppercase font-bold tracking-wider text-tertiary">
           {totalArticles} {totalArticles === 1 ? "Artículo" : "Artículos"}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
-        
-        <div className="lg:col-span-2">
+        <div className={leftColClass}>
           {cartItems.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-gray-300">
-              <p>Tu carrito está vacío.</p>
-              <AppLink variant="underline" to="/home">
-                Volver a la tienda
-              </AppLink>
+            <div className="w-full py-12 border border-dashed border-tertiary flex flex-col items-center justify-center text-center min-h-[200px]">
+              <div>
+                <p>Tu carrito está vacío.</p>
+
+                <AppLink variant="underline" to="/explore">
+                  Volver a la tienda
+                </AppLink>
+              </div>
             </div>
           ) : (
             cartItems.map((item, index) => (
               <div
                 key={item.id}
-                className={`border-b border-gray-300 py-6 flex items-center justify-between gap-4 ${index === 0 ? "border-t" : ""}`}
+                className={`border-b border-tertiary py-6 flex items-center justify-between gap-4 ${
+                  index === 0 ? "border-t" : ""
+                }`}
               >
                 <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 border border-gray-400 p-1 flex-shrink-0 bg-gray-50">
+                  <div className="w-24 h-24 border border-tertiary p-1 shrink-0 bg-gray-50">
                     <img
                       src={item.image || "https://picsum.photos/id/26/50/50"}
                       alt={item.name}
                       className="w-full h-full object-cover grayscale"
                     />
                   </div>
+
                   <div>
                     <h3>{item.name}</h3>
-                    <p>Talla: {item.size} | Color: {item.color}</p>
+                    <p>
+                      Talla: {item.size?.value} | Color: {item.color?.value}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-8">
-                  <div className="flex items-center border border-gray-400 bg-white">
+                  <div className="flex items-center border border-tertiary bg-white">
                     <button
-                      onClick={() => handleDecrease(item.id)}
+                      onClick={() => decreaseItem(item.id)}
                       disabled={item.quantity <= 1}
-                      className={`px-3 py-1.5 transition-colors ${item.quantity <= 1 ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                      className={`px-3 py-1.5 transition-colors cursor-pointer ${
+                        item.quantity <= 1
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "hover:bg-gray-100"
+                      }`}
                     >
                       -
                     </button>
-                    <div className="px-4 py-1.5 font-medium border-x border-gray-400 min-w-[32px] text-center select-none text-sm">
+
+                    <div className="px-4 py-1.5 font-medium border-x border-tertiary min-w-8 text-center select-none text-sm">
                       {item.quantity}
                     </div>
+
                     <button
-                      onClick={() => handleIncrease(item.id)}
-                      className="px-3 py-1.5 hover:bg-gray-100 transition-colors"
+                      onClick={() => handleIncrease(item)}
+                      disabled={item.quantity >= item.maxStock}
+                      className={`px-3 py-1.5 transition-colors cursor-pointer ${
+                        item.quantity >= item.maxStock
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "hover:bg-gray-100"
+                      }`}
                     >
                       +
                     </button>
@@ -127,11 +142,14 @@ export function Cart() {
 
                   <div className="flex items-center gap-3">
                     <div className="text-base tracking-tight">
-                      <strong>${(item.price * item.quantity).toFixed(2)}</strong>
+                      <strong>
+                        {formatCurrency(item.price * item.quantity)}
+                      </strong>
                     </div>
+
                     <button
-                      onClick={() => handleRemove(item.id)}
-                      className="text-gray-400 hover:text-red-600 text-lg font-light transition-colors px-1"
+                      onClick={() => removeItem(item.id)}
+                      className="text-gray-400 hover:text-primary text-lg font-light transition-colors px-1 cursor-pointer"
                     >
                       ×
                     </button>
@@ -143,37 +161,44 @@ export function Cart() {
         </div>
 
         {cartItems.length > 0 && (
-          <div className="border border-gray-400 p-8 bg-white min-w-[320px]">
-            <div className="border-b border-gray-200 pb-4 mb-6">
+          <div className="border border-tertiary p-8 bg-natural min-w-[320px]">
+            <div className="border-b border-tertiary pb-4 mb-6">
               <h3>Resumen de Orden</h3>
             </div>
 
-            <div className="space-y-4 text-xs uppercase font-medium tracking-wider text-gray-500 mb-8">
+            <div className="space-y-4 text-xs uppercase font-medium tracking-wider text-tertiary mb-8">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <strong className="text-black">${subtotal.toFixed(2)}</strong>
+                <strong className="text-black">
+                  {formatCurrency(subtotal)}
+                </strong>
               </div>
+
               <div className="flex justify-between">
                 <span>Envío Estimado</span>
-                <strong className="text-black">${shippingCost.toFixed(2)}</strong>
+                <strong className="text-black">
+                  {formatCurrency(shippingCost)}
+                </strong>
               </div>
             </div>
 
-            <div className="flex justify-between items-baseline border-t border-black pt-4 mb-8">
+            <div className="flex justify-between items-baseline border-t border-tertiary pt-4 mb-8">
               <span>Total</span>
+
               <div className="text-2xl font-bold tracking-tight text-black">
-                <strong>${total.toFixed(2)}</strong>
+                <strong>{formatCurrency(total)}</strong>
               </div>
             </div>
 
             <div className="flex flex-col gap-4 items-center w-full">
-              <AppLink to="/checkout" state={{ items: cartItems, subtotal: subtotal }} className="w-full">
-                <Button className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest text-xs text-center justify-center">
-                  Finalizar Pedido
-                </Button>
-              </AppLink>
-
-              <AppLink variant="underline" to="/home">
+              <Button
+                fullWidth
+                onClick={handleContinueToCheckout}
+                disabled={authLoading || cartLoading || cartItems.length === 0}
+              >
+                Finalizar Pedido
+              </Button>
+              <AppLink variant="underline" to="/explore">
                 Continuar Comprando
               </AppLink>
             </div>

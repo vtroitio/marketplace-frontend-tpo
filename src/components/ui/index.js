@@ -6,3 +6,5 @@ export { Logo } from "./Logo";
 export { Textarea } from "./Textarea";
 export { Input } from "./Input";
 export { Select } from "./Select";
+export { SearchBar } from "./SearchBar";
+export { Spinner } from "./Spinner";

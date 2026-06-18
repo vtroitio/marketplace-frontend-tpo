@@ -1,37 +1,96 @@
 import { Card, AppLink, Button } from "../components/ui";
 import { RightArrowIcon, CompassIcon } from "../components/icons";
-import heroImage from "../assets/home-hero.png";
+import TitanImage from "../assets/home-titan.png";
 import hoodieImage from "../assets/product-hoodie.png";
 import tshirtImage from "../assets/product-tshirt.png";
+import { useAuth } from "../auth/AuthContext";
+import { hasRole, ROLES } from "../helpers/roles";
 
 const featuredProducts = [
   {
+    id: 1,
     title: 'Hoodie Type-01 "Ghost"',
-    price: "$120.00",
+    price: 120,
     image: hoodieImage,
   },
   {
+    id: 2,
     title: "T-Shirt Unit-02",
-    price: "$45.00",
+    price: 45,
     image: tshirtImage,
   },
   {
+    id: 3,
     title: "T-Shirt Unit-02",
-    price: "$45.00",
+    price: 45,
     image: tshirtImage,
   },
 ];
 
+function BecomeSellerSection() {
+  return (
+    <section className="flex items-center justify-center bg-secondary px-6 py-20 text-center text-neutral">
+      <div className="mx-auto w-full max-w-4xl flex flex-col gap-4 items-center">
+        <CompassIcon size={44} className="text-primary" />
+
+        <h1>Crea tu legado. Únete como vendedor.</h1>
+
+        <div className="flex flex-col gap-17 max-w-xl">
+          <p>
+            Buscamos diseñadores que entiendan el poder del minimalismo.
+            Convierte tus visiones en vestimenta premium para una audiencia
+            global.
+          </p>
+
+          <Button to="/sell">Aplicar ahora</Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SellerDashboardSection() {
+  return (
+    <section className="flex items-center justify-center bg-secondary px-6 py-20 text-center text-neutral">
+      <div className="mx-auto w-full max-w-4xl flex flex-col gap-4 items-center">
+        <CompassIcon size={44} className="text-primary" />
+
+        <h1>Tu tienda, tu legado.</h1>
+
+        <div className="flex flex-col gap-8 max-w-xl">
+          <p>
+            Administrá tus productos, gestioná tu inventario y seguí el
+            crecimiento de tu marca dentro de Skindex.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button to="/sell">Ir a mi panel</Button>
+            <Button variant="inverted" to="/sell/create">
+              Publicar producto
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage() {
+  const { isAuthenticated, userRole } = useAuth();
+
+  const isSeller = isAuthenticated && hasRole(ROLES.SELLER, userRole);
+
   return (
     <div className="bg-neutral">
       <section
-        className="h-230 relative flex items-center justify-center overflow-hidden border-b border-secondary bg-neutral px-6 py-16 text-center"
+        className="h-230 relative flex items-center justify-center overflow-hidden border-secondary bg-neutral px-6 py-16 text-center"
         style={{
-          backgroundImage: `linear-gradient(rgba(250,250,250,0.12), rgba(250,250,250,0.12)), url(${heroImage}), url(${heroImage})`,
-          backgroundPosition: "center top, center top, center center",
-          backgroundRepeat: "no-repeat, no-repeat, no-repeat",
-          backgroundSize: "auto 108%, auto 108%, cover",
+          /* Aplicamos el gris hexadecimal seleccionado */
+          backgroundColor: "#5f5e5e", 
+          backgroundImage: `linear-gradient(rgba(250,250,250,0.12), rgba(250,250,250,0.12)), url(${TitanImage})`,
+          backgroundPosition: "center center, center bottom",
+          backgroundRepeat: "no-repeat, no-repeat",
+          backgroundSize: "cover, auto 100%",
         }}
       >
         <div className="mx-auto w-full max-w-4xl">
@@ -68,40 +127,26 @@ export function HomePage() {
             image={featuredProducts[0].image}
             title={featuredProducts[0].title}
             price={featuredProducts[0].price}
+            to={`/explore/${featuredProducts[0].id}`}
           />
 
           <div className="grid gap-6 md:h-full md:grid-rows-2">
-            {featuredProducts.slice(1).map((product, index) => (
+            {featuredProducts.slice(1).map((product) => (
               <Card
-                key={`${product.title}-${index}`}
+                key={product.id}
                 variant="small"
                 className="md:h-full md:max-w-none"
                 image={product.image}
                 title={product.title}
                 price={product.price}
+                to={`/explore/${product.id}`}
               />
             ))}
           </div>
         </div>
       </section>
 
-      <section className="flex items-center justify-center bg-secondary px-6 py-20 text-center text-neutral">
-        <div className="mx-auto w-full max-w-4xl flex flex-col gap-4 items-center">
-          <CompassIcon size={44} className="text-primary" />
-
-          <h1>Crea tu legado. Únete como vendedor.</h1>
-
-          <div className="flex flex-col gap-17 max-w-xl">
-            <p>
-              Buscamos diseñadores que entiendan el poder del minimalismo.
-              Convierte tus visiones en vestimenta premium para una audiencia
-              global.
-            </p>
-
-            <Button to="/sell">Aplicar ahora</Button>
-          </div>
-        </div>
-      </section>
+      {isSeller ? <SellerDashboardSection /> : <BecomeSellerSection />}
     </div>
   );
 }

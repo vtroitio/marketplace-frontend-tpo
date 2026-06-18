@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Input } from "../components/ui/Input";
-import { Textarea } from "../components/ui/Textarea";
-import { Button } from "../components/ui/Button";
-import { CheckIcon, DiamondIcon, EyeIcon } from "../components/icons";
+import { Input } from "../../components/ui/Input";
+import { Textarea } from "../../components/ui/Textarea";
+import { Button } from "../../components/ui/Button";
+import { CheckIcon, DiamondIcon, EyeIcon } from "../../components/icons";
 
-export function SellerPage() {
+export function BecomeSellerView() {
   const [formData, setFormData] = useState({
     brandName: "",
     portfolioLink1: "",
@@ -44,38 +44,45 @@ export function SellerPage() {
     <div className="bg-secondary text-neutral">
       <div className="mx-auto max-w-295 px-8 py-20 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-
           {/* Sección Izquierda - Información */}
           <div className="space-y-8">
             <div className="space-y-6">
               <h1>Vender en Skindex.</h1>
 
               <p>
-                En Skindex valoramos la visión única. No somos un marketplace genérico. Buscamos diseñadores que entiendan el poder del minimalismo y la estética geek elevada.
+                En Skindex valoramos la visión única. No somos un marketplace
+                genérico. Buscamos diseñadores que entiendan el poder del
+                minimalismo y la estética geek elevada.
               </p>
 
               <p>
-                Si tienes una perspectiva distintiva y colecciones que reflejen esa visión, queremos conocerte. El equilibrio entre la economía minimalista y la presencia técnica imprescindible. Es tu momento de ser parte de algo especial.
+                Si tienes una perspectiva distintiva y colecciones que reflejen
+                esa visión, queremos conocerte. El equilibrio entre la economía
+                minimalista y la presencia técnica imprescindible. Es tu momento
+                de ser parte de algo especial.
               </p>
             </div>
 
             <div className="space-y-4 border-l-2 border-primary pl-6">
               <div className="flex items-start gap-3">
-                <CheckIcon size={22} className="text-primary flex-shrink-0 mt-0.5" />
+                <CheckIcon size={22} className="text-primary shrink-0 mt-0.5" />
                 <span className="text-sm uppercase font-semibold tracking-wider">
                   Estándares de calidad rigurosos
                 </span>
               </div>
 
               <div className="flex items-start gap-3">
-                <DiamondIcon size={20} className="text-primary flex-shrink-0 mt-0.5" />
+                <DiamondIcon
+                  size={20}
+                  className="text-primary shrink-0 mt-0.5"
+                />
                 <span className="text-sm uppercase font-semibold tracking-wider">
                   Exclusividad y curaduría
                 </span>
               </div>
 
               <div className="flex items-start gap-3">
-                <EyeIcon size={20} className="text-primary flex-shrink-0 mt-0.5" />
+                <EyeIcon size={20} className="text-primary shrink-0 mt-0.5" />
                 <span className="text-sm uppercase font-semibold tracking-wider">
                   Visibilidad ante una audiencia sofisticada
                 </span>
@@ -97,7 +104,6 @@ export function SellerPage() {
             "
           >
             <form onSubmit={handleSubmit} className="space-y-6">
-
               <div>
                 <Input
                   label="Nombre de marca"
@@ -154,16 +160,11 @@ export function SellerPage() {
                 />
               </div>
 
-              <Button
-                type="submit"
-                fullWidth
-                disabled={isSubmitting}
-              >
+              <Button type="submit" fullWidth disabled={isSubmitting}>
                 {isSubmitting ? "Enviando..." : "Enviar Solicitud"}
               </Button>
             </form>
           </div>
-
         </div>
       </div>
     </div>

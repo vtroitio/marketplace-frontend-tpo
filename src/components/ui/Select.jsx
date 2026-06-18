@@ -12,7 +12,7 @@ export function Select({ label, value, placeholder, children, ...props }) {
       <div className="relative w-full">
         <select
           value={value}
-          className={`
+          className={`${props.disabled ? "cursor-not-allowed! opacity-50" : ""}
             inline-flex gap-2 items-center border border-secondary p-4 w-full bg-transparent text-lg
             appearance-none focus:outline-none cursor-pointer
         `}

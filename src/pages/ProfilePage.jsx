@@ -2,40 +2,124 @@ import { useState } from "react";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { ProfileIcon } from "../components/icons";
+import { useAuth } from "../auth/AuthContext";
+import { updateProfile } from "../api/users";
+
+const emptyUserData = {
+  username: "",
+  name: "",
+  surname: "",
+  role: {},
+};
+
+function mapUserToFormData(user) {
+  if (!user) return emptyUserData;
+
+  return {
+    username: user.username ?? "",
+    name: user.name ?? "",
+    surname: user.surname ?? "",
+    role: user.role ?? {},
+  };
+}
 
 export function ProfilePage() {
-  const [formData, setFormData] = useState({
-    nombre: "Juan",
-    apellido: "Doe",
-    usuario: "juandoe01",
-    email: "juandoe@ejemplo.com",
-  });
+  const { currentUser, authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-neutral">
+        <div className="mx-auto max-w-3xl px-8 py-12">
+          <p>Cargando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-neutral">
+        <div className="mx-auto max-w-3xl px-8 py-12">
+          <p>No hay un usuario autenticado.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ProfileForm
+      key={currentUser.id}
+      initialData={mapUserToFormData(currentUser)}
+    />
+  );
+}
+
+function ProfileForm({ initialData }) {
+  const [formData, setFormData] = useState(initialData);
+  const [savedData, setSavedData] = useState(initialData);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const roleName =
+    typeof savedData.role === "string" ? savedData.role : savedData.role?.name;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Datos guardados:", formData);
+
+    const isSameData =
+      formData.username === savedData.username &&
+      formData.name === savedData.name &&
+      formData.surname === savedData.surname;
+
+    if (isSameData) return;
+
+    try {
+      setLoading(true);
+      setError("");
+
+      await updateProfile({
+        username: formData.username,
+        name: formData.name,
+        surname: formData.surname,
+      });
+
+      setSavedData({ ...formData });
+
+      console.log("Datos guardados:", formData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-neutral">
       <div className="mx-auto max-w-3xl px-8 py-12">
-
-        {/* Avatar + Nombre */}
         <div className="flex items-center gap-4 mb-8">
           <div className="border border-secondary p-3">
             <ProfileIcon size={32} />
           </div>
-          <h2>{formData.nombre} {formData.apellido}</h2>
+
+          <h2>
+            {savedData.name} {savedData.surname}
+          </h2>
+
+          <p>{roleName}</p>
         </div>
 
-        <hr className="border-secondary/20 mb-10" />
+        <hr className="border-tertiary mb-10" />
 
-        {/* Gestión de datos */}
         <section className="mb-12">
           <div className="mb-8">
             <h3>Gestión de datos</h3>
@@ -46,66 +130,76 @@ export function ProfilePage() {
               <Input
                 label="Nombre"
                 type="text"
-                name="nombre"
-                value={formData.nombre}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
-                placeholder="Juan"
+                required
               />
+
               <Input
                 label="Apellido"
                 type="text"
-                name="apellido"
-                value={formData.apellido}
+                name="surname"
+                value={formData.surname}
                 onChange={handleChange}
-                placeholder="Doe"
+                required
               />
             </div>
 
             <Input
               label="Usuario"
               type="text"
-              name="usuario"
-              value={formData.usuario}
+              name="username"
+              value={formData.username}
               onChange={handleChange}
-              placeholder="juandoe01"
+              required
             />
 
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="juandoe@ejemplo.com"
-            />
+            <div className="flex flex-col items-end gap-4">
+              <Button type="submit" disabled={loading}>
+                {loading ? "Guardando..." : "Guardar datos"}
+              </Button>
 
-            <div className="flex justify-end">
-              <Button type="submit">Guardar datos</Button>
+              <p className="min-h-6 text-primary text-center">{error}</p>
             </div>
           </form>
         </section>
 
-        <hr className="border-secondary/20 mb-10" />
+        {/* <hr className="border-tertiary mb-10" /> */}
 
-        {/* Seguridad */}
-        <section>
+        {/* <section>
           <div className="mb-8">
             <h3>Seguridad</h3>
           </div>
 
-          <div className="border border-secondary/20 p-6 flex items-center justify-between">
-            <div>
-              <p>Contraseña</p>
-              <span className="text-sm text-tertiary">
-                Último cambio hace 3 meses
-              </span>
-            </div>
-            <Button variant="outline">
-              Restablecer contraseña
-            </Button>
-          </div>
-        </section>
+          <div className="flex flex-col gap-4">
+            <div className="border border-tertiary p-6 gap-16 flex items-center justify-between">
+              <div className="w-full">
+                <p>Email</p>
+                <span className="text-sm text-tertiary">
+                  Último cambio hace 3 meses
+                </span>
+              </div>
 
+              <Button fullWidth variant="outline">
+                Cambiar email
+              </Button>
+            </div>
+
+            <div className="border border-tertiary p-6 gap-16 flex items-center justify-between">
+              <div className="w-full">
+                <p>Contraseña</p>
+                <span className="text-sm text-tertiary">
+                  Último cambio hace 3 meses
+                </span>
+              </div>
+
+              <Button fullWidth variant="outline">
+                Restablecer contraseña
+              </Button>
+            </div>
+          </div>
+        </section> */}
       </div>
     </div>
   );
