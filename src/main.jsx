@@ -6,6 +6,8 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider.jsx";
 import { ToastProvider } from "./toast/ToastProvider.jsx";
 import { CartProvider } from "./cart/CartProvider.jsx";
+import { store } from "./app/store";
+import { Provider } from "react-redux";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -13,7 +15,9 @@ createRoot(document.getElementById("root")).render(
       <ToastProvider>
         <AuthProvider>
           <CartProvider>
-            <App />
+            <Provider store={store}>
+              <App />
+            </Provider>
           </CartProvider>
         </AuthProvider>
       </ToastProvider>
