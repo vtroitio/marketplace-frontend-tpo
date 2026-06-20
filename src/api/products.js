@@ -1,4 +1,4 @@
-import { request } from "./api";
+import { request } from "./client";
 
 export function getAllProducts({
   page = 0,

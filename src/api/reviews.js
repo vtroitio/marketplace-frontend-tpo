@@ -1,4 +1,4 @@
-import { request } from "./api";
+import { request } from "./client";
 
 export function getReviewsByProductId(productId) {
   return request(`/products/${productId}/reviews`, {

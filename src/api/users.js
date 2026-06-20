@@ -1,4 +1,4 @@
-import { request } from "./api";
+import { request } from "./client";
 
 /**
  * Fetches the current user's profile.

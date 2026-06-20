@@ -1,5 +1,8 @@
-import { clearSession } from "../helpers/authStorage";
-import { request } from "./api";
+import {
+  request,
+  setAccessToken,
+  clearAccessToken,
+} from "./client";
 
 /**
  * Registers a new user with the provided data.
@@ -12,12 +15,14 @@ import { request } from "./api";
  * @param {string} userData.surname - The user's surname.
  * @returns {Promise<{ accessToken: string }>} The response from the backend.
  */
-export function register(userData) {
-  return request("/auth/register", {
+export async function register(userData) {
+  const data = await request("/auth/register", {
     method: "POST",
     body: userData,
     auth: false,
   });
+  setAccessToken(data.accessToken);
+  return data;
 }
 
 /**
@@ -29,11 +34,13 @@ export function register(userData) {
  * @returns {Promise<{ accessToken: string }>} The response from the backend.
  */
 export async function login(credentials) {
-  return request("/auth/login", {
+  const data = await request("/auth/login", {
     method: "POST",
     body: credentials,
     auth: false,
   });
+  setAccessToken(data.accessToken);
+  return data;
 }
 
 /**
@@ -47,6 +54,6 @@ export async function logout() {
       auth: false,
     });
   } finally {
-    clearSession();
+    clearAccessToken();
   }
 }
