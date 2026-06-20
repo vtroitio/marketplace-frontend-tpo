@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useSelector } from "react-redux";
 import { useCart } from "../cart/CartContext";
 import { useToast } from "../toast/ToastContext";
 import { Button, Spinner } from "../components/ui";
@@ -280,9 +280,11 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
 
 export function ProductDetailPage() {
   const { productId } = useParams();
-  const { currentUser, authLoading, isAuthenticated } = useAuth();
   const { addItem } = useCart();
   const toast = useToast();
+  const currentUser = useSelector((state) => state.auth.user);
+  const authLoading = useSelector((state) => state.auth.loading || !state.auth.initialized);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

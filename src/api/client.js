@@ -1,36 +1,24 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
-let accessToken = null;
 let refreshPromise = null;
+let storePromise = null;
 
-/**
- * Retrieves the current access token.
- *
- * @returns {string|null} The access token or null if not set.
- */
-export function getAccessToken() {
-  return accessToken;
+function getStore() {
+  if (!storePromise) {
+    storePromise = import("../app/store").then((module) => module.store);
+  }
+
+  return storePromise;
 }
 
-/**
- * Sets the access token.
- *
- * @param {string|null} token The access token or null to clear it.
- */
-export function setAccessToken(token) {
-  accessToken = token;
+async function getAccessTokenFromRedux() {
+  const store = await getStore();
+  return store.getState().auth.accessToken;
 }
 
-/**
- * Clears the access token.
- */
-export function clearAccessToken() {
-  accessToken = null;
-}
-
-function notifySessionExpired() {
-  clearAccessToken();
-  window.dispatchEvent(new Event("auth:session-expired"));
+async function dispatchRedux(action) {
+  const store = await getStore();
+  store.dispatch(action);
 }
 
 async function parseResponse(response) {
@@ -52,7 +40,9 @@ async function parseResponse(response) {
 }
 
 function buildError(data, fallbackMessage, response) {
-  const error = new Error(data?.message || data || fallbackMessage);
+  const error = new Error(
+    data?.message || data?.error || data || fallbackMessage,
+  );
 
   error.status = response?.status ?? null;
   error.errors = data?.errors ?? null;
@@ -60,7 +50,6 @@ function buildError(data, fallbackMessage, response) {
 
   return error;
 }
-
 /**
  * Refreshes the access token using the refresh token.
  * Ensures that only one refresh request is made at a time.
@@ -68,7 +57,7 @@ function buildError(data, fallbackMessage, response) {
  * @returns {Promise<string>} A Promise that resolves to the new access token.
  * @throws {Error} If the refresh fails or the backend does not return a new access token.
  */
-async function refreshAccessToken() {
+export async function refreshAccessToken() {
   if (!refreshPromise) {
     refreshPromise = fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
@@ -85,9 +74,12 @@ async function refreshAccessToken() {
           throw new Error("El backend no devolvió un accessToken");
         }
 
-        setAccessToken(data.accessToken);
+        await dispatchRedux({
+          type: "auth/setAccessToken",
+          payload: data.accessToken,
+        });
 
-        return data.accessToken;
+        return data;
       })
       .finally(() => {
         refreshPromise = null;
@@ -97,15 +89,11 @@ async function refreshAccessToken() {
   return refreshPromise;
 }
 
-function buildRequestConfig(options) {
-  const {
-    body,
-    headers = {},
-    auth = true,
-    ...customOptions
-  } = options;
+async function buildRequestConfig(options) {
+  const { body, headers = {}, auth = true, ...customOptions } = options;
 
   const isFormData = body instanceof FormData;
+  const accessToken = auth ? await getAccessTokenFromRedux() : null;
 
   const requestHeaders = {
     ...(!isFormData && body !== undefined && body !== null
@@ -131,14 +119,17 @@ function buildRequestConfig(options) {
 async function sendRequest(endpoint, options = {}, retry = true) {
   const { auth = true, skipAuthRefresh = false } = options;
 
-  const config = buildRequestConfig(options);
+  const config = await buildRequestConfig(options);
 
   const response = await fetch(`${API_URL}${endpoint}`, config);
   const data = await parseResponse(response);
 
   if (response.status === 401 && auth && !skipAuthRefresh) {
     if (!retry) {
-      notifySessionExpired();
+      await dispatchRedux({
+        type: "auth/clearAuthState",
+      });
+
       throw new Error("Sesión expirada. Volvé a iniciar sesión.");
     }
 
@@ -147,7 +138,10 @@ async function sendRequest(endpoint, options = {}, retry = true) {
 
       return sendRequest(endpoint, options, false);
     } catch (error) {
-      notifySessionExpired();
+      await dispatchRedux({
+        type: "auth/clearAuthState",
+      });
+
       throw new Error("Sesión expirada. Volvé a iniciar sesión.");
     }
   }

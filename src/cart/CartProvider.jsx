@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CartContext } from "./CartContext";
-import { useAuth } from "../auth/AuthContext";
+import { useSelector } from "react-redux";
 import {
   addCartItem as addCartItemRequest,
   clearBackendCart,
@@ -257,7 +257,16 @@ function mapBackendCart(cart) {
 }
 
 export function CartProvider({ children }) {
-  const { isAuthenticated, authLoading, currentUser } = useAuth();
+  const {
+    isAuthenticated = false,
+    loading = false,
+    initialized = true,
+    user = null,
+    currentUser: currentUserFromState = null,
+  } = useSelector((state) => state.auth ?? {});
+
+  const authLoading = loading || !initialized;
+  const currentUser = user ?? currentUserFromState;
 
   const [cartItems, setCartItems] = useState(() => getLocalCart());
   const [cartLoading, setCartLoading] = useState(false);
@@ -465,7 +474,8 @@ export function CartProvider({ children }) {
         return {
           ok: false,
           status: "ERROR",
-          message: error.message || "No se pudo agregar el producto al carrito.",
+          message:
+            error.message || "No se pudo agregar el producto al carrito.",
         };
       } finally {
         setCartLoading(false);

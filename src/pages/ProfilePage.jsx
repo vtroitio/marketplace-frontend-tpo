@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { ProfileIcon } from "../components/icons";
-import { useAuth } from "../auth/AuthContext";
 import { updateProfile } from "../api/users";
+import { updateAuthUser } from "../features/auth/authSlice";
 
 const emptyUserData = {
   username: "",
@@ -24,7 +25,10 @@ function mapUserToFormData(user) {
 }
 
 export function ProfilePage() {
-  const { currentUser, authLoading } = useAuth();
+  const currentUser = useSelector((state) => state.auth.user);
+  const authLoading = useSelector(
+    (state) => state.auth.loading || !state.auth.initialized,
+  );
 
   if (authLoading) {
     return (
@@ -49,12 +53,15 @@ export function ProfilePage() {
   return (
     <ProfileForm
       key={currentUser.id}
+      currentUser={currentUser}
       initialData={mapUserToFormData(currentUser)}
     />
   );
 }
 
-function ProfileForm({ initialData }) {
+function ProfileForm({ initialData, currentUser }) {
+  const dispatch = useDispatch();
+
   const [formData, setFormData] = useState(initialData);
   const [savedData, setSavedData] = useState(initialData);
 
@@ -62,7 +69,9 @@ function ProfileForm({ initialData }) {
   const [error, setError] = useState("");
 
   const roleName =
-    typeof savedData.role === "string" ? savedData.role : savedData.role?.name;
+    typeof savedData.role === "string"
+      ? savedData.role
+      : savedData.role?.name ?? savedData.role?.code ?? "";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,15 +96,26 @@ function ProfileForm({ initialData }) {
       setLoading(true);
       setError("");
 
-      await updateProfile({
+      const updatedUser = await updateProfile({
         username: formData.username,
         name: formData.name,
         surname: formData.surname,
       });
 
-      setSavedData({ ...formData });
+      const nextUser = {
+        ...currentUser,
+        ...(updatedUser ?? {}),
+        username: formData.username,
+        name: formData.name,
+        surname: formData.surname,
+      };
+
+      dispatch(updateAuthUser(nextUser));
+
+      setSavedData(mapUserToFormData(nextUser));
+      setFormData(mapUserToFormData(nextUser));
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "No se pudo actualizar el perfil.");
     } finally {
       setLoading(false);
     }
