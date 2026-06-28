@@ -4,7 +4,7 @@ import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { CouponIcon } from "../components/icons";
 import { useCart } from "../cart/CartContext";
-import { useAuth } from "../auth/AuthContext";
+import { useSelector } from "react-redux";
 import { useToast } from "../toast/ToastContext";
 import { formatCurrency } from "../helpers/formatters";
 import { checkoutOrder } from "../api/orders";
@@ -34,7 +34,8 @@ export function Checkout() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const { isAuthenticated, authLoading } = useAuth();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const authLoading = useSelector((state) => state.auth.loading || !state.auth.initialized);
 
   const {
     cartItems,

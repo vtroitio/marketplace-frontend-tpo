@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { LeftArrowIcon } from "../components/icons";
-import { useAuth } from "../auth/AuthContext";
 import { AppLink, Button, Input } from "../components/ui";
+import { registerUser } from "../features/auth/authThunks";
 import RyukLight from "../assets/register-ryuklight.png";
 
 export function RegisterPage() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { isAuthenticated, register } = useAuth();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const loading = useSelector((state) => state.auth.loading);
 
   const from = location.state?.from
     ? location.state.from.pathname + location.state.from.search
@@ -23,7 +26,6 @@ export function RegisterPage() {
     surname: "",
   });
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -35,17 +37,16 @@ export function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setError(null);
+    setFieldErrors({});
+
     if (form.password !== repeatPassword) {
       setError("Las contraseñas no coinciden");
       return;
     }
 
     try {
-      setLoading(true);
-      setError(null);
-      setFieldErrors({});
-
-      await register(form);
+      await dispatch(registerUser(form)).unwrap();
 
       navigate(from, { replace: true });
     } catch (err) {
@@ -53,26 +54,22 @@ export function RegisterPage() {
         setFieldErrors(err.errors);
         setError("Corregí los errores del formulario.");
       } else {
-        setError(err?.message || "Error al crear cuenta");
+        setError(err?.message || err || "Error al crear cuenta");
       }
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <div className="w-full min-h-screen bg-neutral">
       <div className="grid w-full min-h-screen grid-cols-1 bg-white text-black lg:grid-cols-[45%_55%] xl:grid-cols-[50%_50%]">
-        
         <div className="hidden lg:flex w-full h-full bg-[#fafafa]">
-          <img 
-            src={RyukLight} 
-            alt="Ryuk & Light" 
-            className="w-full h-full object-cover" 
+          <img
+            src={RyukLight}
+            alt="Ryuk & Light"
+            className="w-full h-full object-cover"
           />
         </div>
 
-        {/* Panel Derecho: Formulario */}
         <div className="flex items-center justify-center p-6 sm:p-10 md:p-16 lg:p-20">
           <div className="w-full max-w-[480px] sm:max-w-[560px] space-y-8 md:space-y-10">
             <div className="space-y-4">
@@ -80,6 +77,7 @@ export function RegisterPage() {
                 <LeftArrowIcon />
                 <span>Volver al inicio</span>
               </AppLink>
+
               <div className="space-y-3 text-center lg:text-left">
                 <h1>Crear Cuenta</h1>
                 <div className="text-sm uppercase tracking-[1.2px] text-secondary">
@@ -88,23 +86,35 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <form className="space-y-5 md:space-y-6 w-full max-w-full" onSubmit={handleSubmit}>
+            <form
+              className="space-y-5 md:space-y-6 w-full max-w-full"
+              onSubmit={handleSubmit}
+            >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="Nombre"
                   type="text"
                   placeholder="Juan"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
                   required
                 />
+
                 <Input
                   label="Apellido"
                   type="text"
                   placeholder="Doe"
                   value={form.surname}
                   onChange={(e) =>
-                    setForm({ ...form, surname: e.target.value })
+                    setForm((prev) => ({
+                      ...prev,
+                      surname: e.target.value,
+                    }))
                   }
                   required
                 />
@@ -115,36 +125,67 @@ export function RegisterPage() {
                 type="text"
                 placeholder="juandoe01"
                 value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    username: e.target.value,
+                  }))
+                }
                 required
               />
+
+              {fieldErrors.username && (
+                <p className="text-xs text-primary">{fieldErrors.username}</p>
+              )}
+
               <Input
                 label="Email"
                 type="email"
                 placeholder="juandoc@ejemplo.com"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
+                }
                 required
               />
+
+              {fieldErrors.email && (
+                <p className="text-xs text-primary">{fieldErrors.email}</p>
+              )}
+
               <div>
                 <Input
                   label="Contraseña"
                   type="password"
                   placeholder="Mínimo 8 caracteres"
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }))
+                  }
                   required
                 />
+
                 {fieldErrors.password ? (
                   <div className="mt-1">
-                    <p className="text-xs text-primary">{fieldErrors.password}</p>
+                    <p className="text-xs text-primary">
+                      {fieldErrors.password}
+                    </p>
                   </div>
                 ) : (
                   <div className="mt-1">
-                    <p className="text-xs text-secondary">Debe contener mayúsculas, minúsculas y números.</p>
+                    <p className="text-xs text-secondary">
+                      Debe contener mayúsculas, minúsculas y números.
+                    </p>
                   </div>
                 )}
               </div>
+
               <Input
                 label="Repetir Contraseña"
                 type="password"
@@ -157,6 +198,7 @@ export function RegisterPage() {
               <Button type="submit" fullWidth disabled={loading}>
                 {loading ? "Creando cuenta..." : "Crear Cuenta"}
               </Button>
+
               <p className="min-h-6 text-primary text-center">{error}</p>
             </form>
 

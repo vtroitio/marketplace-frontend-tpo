@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { useAuth } from "../../auth/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutUser } from "../../features/auth/authThunks";
 import { Button } from "../ui";
 import { ProfileIcon } from "../icons";
 
 export function UserMenu() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, logout } = useAuth();
+
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const authLoading = useSelector((state) => state.auth.loading);
 
   const menuRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -21,7 +26,8 @@ export function UserMenu() {
 
   async function handleLogout() {
     try {
-      await logout();
+      await dispatch(logoutUser()).unwrap();
+      navigate("/", { replace: true });
     } catch (error) {
       console.error(error);
     } finally {
@@ -111,8 +117,9 @@ export function UserMenu() {
                 className="text-secondary! hover:text-primary!"
                 onClick={handleLogout}
                 variant="text"
+                disabled={authLoading}
               >
-                Cerrar sesión
+                {authLoading ? "Cerrando sesión..." : "Cerrar sesión"}
               </Button>
             </>
           )}

@@ -3,7 +3,7 @@ import { Button } from "../components/ui/Button";
 import { AppLink } from "../components/ui/AppLink";
 import { useCart } from "../cart/CartContext";
 import { useToast } from "../toast/ToastContext";
-import { useAuth } from "../auth/AuthContext";
+import { useSelector } from "react-redux";
 import { formatCurrency } from "../helpers/formatters";
 
 export function Cart() {
@@ -20,7 +20,8 @@ export function Cart() {
     cartError,
   } = useCart();
   const leftColClass = cartItems.length === 0 ? "lg:col-span-3" : "lg:col-span-2";
-  const { isAuthenticated, authLoading } = useAuth();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const authLoading = useSelector((state) => state.auth.loading || !state.auth.initialized);
 
   const shippingCost = 15.0;
   const total = subtotal > 0 ? subtotal + shippingCost : 0;

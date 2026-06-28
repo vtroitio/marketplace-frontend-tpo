@@ -3,8 +3,9 @@ import { RightArrowIcon, CompassIcon } from "../components/icons";
 import TitanImage from "../assets/home-titan.png";
 import hoodieImage from "../assets/product-hoodie.png";
 import tshirtImage from "../assets/product-tshirt.png";
-import { useAuth } from "../auth/AuthContext";
+import { useSelector } from "react-redux";
 import { hasRole, ROLES } from "../helpers/roles";
+import { selectUserRoleCode } from "../features/auth";
 
 const featuredProducts = [
   {
@@ -76,7 +77,8 @@ function SellerDashboardSection() {
 }
 
 export function HomePage() {
-  const { isAuthenticated, userRole } = useAuth();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const userRole = useSelector(selectUserRoleCode);
 
   const isSeller = isAuthenticated && hasRole(ROLES.SELLER, userRole);
 

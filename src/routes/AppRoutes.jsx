@@ -1,4 +1,3 @@
-import { RoleProtectedRoute } from "./RoleProtectedRoute";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Routes, Route } from "react-router-dom";
 import { MainLayout } from "../components/layout";
@@ -34,21 +33,21 @@ export function AppRoutes() {
         <Route
           path="/sell/new"
           element={
-            <RoleProtectedRoute
+            <ProtectedRoute
               allowedRoles={[ROLES.SELLER, ROLES.ADMIN, ROLES.SUPER_ADMIN]}
             >
               <CreateProductPage />
-            </RoleProtectedRoute>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/sell/edit/:productId"
           element={
-            <RoleProtectedRoute
+            <ProtectedRoute
               allowedRoles={[ROLES.SELLER, ROLES.ADMIN, ROLES.SUPER_ADMIN]}
             >
               <EditProductPage />
-            </RoleProtectedRoute>
+            </ProtectedRoute>
           }
         />
         <Route
