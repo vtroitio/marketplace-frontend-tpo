@@ -1,14 +1,18 @@
 import { useEffect, useState, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { CouponIcon } from "../components/icons";
-import { useCart } from "../cart/CartContext";
-import { useSelector } from "react-redux";
 import { useToast } from "../toast/ToastContext";
 import { formatCurrency } from "../helpers/formatters";
 import { checkoutOrder } from "../api/orders";
 import { validateCoupon } from "../api/coupons";
+import {
+  validateCartForCheckout,
+  reloadCart,
+  selectCartSubtotal,
+} from "../features/cart";
 
 const shippingCost = 15.0;
 
@@ -31,19 +35,18 @@ function getAttributeValue(attribute, fallback = "") {
 }
 
 export function Checkout() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const toast = useToast();
 
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const authLoading = useSelector((state) => state.auth.loading || !state.auth.initialized);
+  const cartItems = useSelector((state) => state.cart.items);
+  const cartLoading = useSelector((state) => state.cart.loading);
+  const subtotal = useSelector(selectCartSubtotal);
 
-  const {
-    cartItems,
-    subtotal,
-    cartLoading,
-    validateCartForCheckout,
-    reloadCart,
-  } = useCart();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const authLoading = useSelector(
+    (state) => state.auth.loading || !state.auth.initialized,
+  );
 
   const validationStartedRef = useRef(false);
 
@@ -62,10 +65,10 @@ export function Checkout() {
     validationStartedRef.current = true;
 
     async function validate() {
-      const result = await validateCartForCheckout();
+      const result = await dispatch(validateCartForCheckout());
 
-      if (!result.ok) {
-        toast.warning(result.message, {
+      if (!result.payload.ok) {
+        toast.warning(result.payload.message, {
           title: "Carrito actualizado",
         });
 
@@ -74,7 +77,7 @@ export function Checkout() {
     }
 
     validate();
-  }, [authLoading, isAuthenticated, validateCartForCheckout, navigate, toast]);
+  }, [dispatch, authLoading, isAuthenticated, navigate, toast]);
 
   if (authLoading || cartLoading) {
     return (
@@ -154,10 +157,10 @@ export function Checkout() {
     try {
       setSubmitLoading(true);
 
-      const validationResult = await validateCartForCheckout();
+      const validationResult = await dispatch(validateCartForCheckout());
 
-      if (!validationResult.ok) {
-        toast.warning(validationResult.message, {
+      if (!validationResult.payload.ok) {
+        toast.warning(validationResult.payload.message, {
           title: "Carrito actualizado",
         });
 
@@ -176,7 +179,7 @@ export function Checkout() {
         cardCvv: formData.cardCvv,
       });
 
-      await reloadCart?.();
+      await dispatch(reloadCart?.());
 
       toast.success("La orden fue creada correctamente.", {
         title: "Compra confirmada",

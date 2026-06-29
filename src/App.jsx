@@ -1,12 +1,12 @@
 import { AppRoutes } from "./routes/AppRoutes";
 import { ScrollToTop } from "./components/ScrollToTop";
-import { AuthInitializer } from "./features/auth";
+import { AppInitializer } from "./features";
 
 export default function App() {
   return (
-    <AuthInitializer>
+    <AppInitializer>
       <ScrollToTop />
       <AppRoutes />
-    </AuthInitializer>
+    </AppInitializer>
   );
 }

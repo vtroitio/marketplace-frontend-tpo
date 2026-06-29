@@ -1,10 +1,11 @@
+import { useSelector } from "react-redux";
 import { CartIcon } from "../icons";
 import { UserMenu } from "./UserMenu";
 import { Logo, AppNavLink } from "../ui";
-import { useCart } from "../../cart/CartContext";
+import { selectTotalArticles } from "../../features/cart";
 
 export function NavBar() {
-  const { totalArticles } = useCart();
+  const totalArticles = useSelector(selectTotalArticles);
 
   return (
     <nav className="relative flex h-20 w-full items-center justify-between border-b border-secondary bg-neutral px-16">

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { useCart } from "../cart/CartContext";
+import { useSelector, useDispatch } from "react-redux";
 import { useToast } from "../toast/ToastContext";
 import { Button, Spinner } from "../components/ui";
 import { CartIcon, PencilIcon, StarIcon } from "../components/icons";
@@ -9,6 +8,7 @@ import { getProductById } from "../api/products";
 import { getReviewsByProductId, createReview } from "../api/reviews";
 import { formatCurrency } from "../helpers/formatters";
 import { ROLES } from "../helpers/roles";
+import { addItem } from "../features/cart";
 
 const ATTRIBUTES = {
   COLOR: "COLOR",
@@ -279,11 +279,13 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
 }
 
 export function ProductDetailPage() {
+  const dispatch = useDispatch();
   const { productId } = useParams();
-  const { addItem } = useCart();
   const toast = useToast();
   const currentUser = useSelector((state) => state.auth.user);
-  const authLoading = useSelector((state) => state.auth.loading || !state.auth.initialized);
+  const authLoading = useSelector(
+    (state) => state.auth.loading || !state.auth.initialized,
+  );
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const [loading, setLoading] = useState(true);
@@ -407,10 +409,7 @@ export function ProductDetailPage() {
   }, [reviews]);
 
   const displayedImage = useMemo(() => {
-    return (
-      selectedColorImages?.[0]?.path ??
-      product?.coverImagePath
-    );
+    return selectedColorImages?.[0]?.path ?? product?.coverImagePath;
   }, [selectedColorImages, product]);
 
   function handleColorSelect(colorId) {
@@ -422,21 +421,23 @@ export function ProductDetailPage() {
   }
 
   const handleAddToCart = async () => {
-    const result = await addItem({
-      id: selectedVariant.id,
-      productId: product.id,
-      name: product.name,
-      size: selectedSize,
-      color: selectedColor,
-      price: selectedVariant.price,
-      quantity: 1,
-      maxStock: selectedVariant.stock,
-      image: product.coverImagePath,
-    });
+    const result = await dispatch(
+      addItem({
+        id: selectedVariant.id,
+        productId: product.id,
+        name: product.name,
+        size: selectedSize,
+        color: selectedColor,
+        price: selectedVariant.price,
+        quantity: 1,
+        maxStock: selectedVariant.stock,
+        image: product.coverImagePath,
+      }),
+    );
 
-    if (!result.ok) {
-      if (result.status === "STOCK_LIMIT") {
-        toast.error(result.message, {
+    if (!result.payload.ok) {
+      if (result.payload.status === "STOCK_LIMIT") {
+        toast.error(result.payload.message, {
           title: "Limite de stock alcanzado",
           duration: 3500,
         });
@@ -444,10 +445,9 @@ export function ProductDetailPage() {
       return;
     }
 
-    toast.success(result.message, {
+    toast.success(result.payload.message, {
       title: "¡Éxito!",
       duration: 3500,
-
     });
   };
 
@@ -503,8 +503,13 @@ export function ProductDetailPage() {
                     type="button"
                     onClick={() => {
                       const current = selectedImage ?? displayedImage;
-                      const idx = imagesToShow.findIndex((img) => img.path === current);
-                      const prev = imagesToShow[(idx - 1 + imagesToShow.length) % imagesToShow.length];
+                      const idx = imagesToShow.findIndex(
+                        (img) => img.path === current,
+                      );
+                      const prev =
+                        imagesToShow[
+                          (idx - 1 + imagesToShow.length) % imagesToShow.length
+                        ];
                       setSelectedImage(prev.path);
                     }}
                     className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border border-secondary w-9 h-9 flex items-center justify-center transition-opacity cursor-pointer"
@@ -516,8 +521,11 @@ export function ProductDetailPage() {
                     type="button"
                     onClick={() => {
                       const current = selectedImage ?? displayedImage;
-                      const idx = imagesToShow.findIndex((img) => img.path === current);
-                      const next = imagesToShow[(idx + 1) % imagesToShow.length];
+                      const idx = imagesToShow.findIndex(
+                        (img) => img.path === current,
+                      );
+                      const next =
+                        imagesToShow[(idx + 1) % imagesToShow.length];
                       setSelectedImage(next.path);
                     }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border border-secondary w-9 h-9 flex items-center justify-center transition-opacity cursor-pointer"
