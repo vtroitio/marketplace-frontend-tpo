@@ -4,7 +4,6 @@ import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ToastProvider } from "./toast/ToastProvider.jsx";
-import { CartProvider } from "./cart/CartProvider.jsx";
 import { store } from "./app/store";
 import { Provider } from "react-redux";
 
@@ -13,9 +12,7 @@ createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <ToastProvider>
         <Provider store={store}>
-          <CartProvider>
-            <App />
-          </CartProvider>
+          <App />
         </Provider>
       </ToastProvider>
     </BrowserRouter>
