@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useToast } from "../toast/ToastContext";
@@ -55,11 +55,7 @@ function getSizesByColor(variants = [], selectedColorId) {
   return Array.from(sizesMap.values());
 }
 
-function findVariantByColorAndSize(
-  variants = [],
-  selectedColorId,
-  selectedSizeId,
-) {
+function findVariantByColorAndSize(variants = [], selectedColorId, selectedSizeId) {
   if (!selectedColorId || !selectedSizeId) return null;
   return (
     variants.find((variant) => {
@@ -114,18 +110,10 @@ function SizeGuideModal({ onClose }) {
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b border-secondary/40">
-              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
-                Talla
-              </th>
-              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
-                Pecho (cm)
-              </th>
-              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
-                Cintura (cm)
-              </th>
-              <th className="text-left py-2 font-bold uppercase tracking-[1.2px] text-xs">
-                Largo (cm)
-              </th>
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">Talla</th>
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">Pecho (cm)</th>
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">Cintura (cm)</th>
+              <th className="text-left py-2 font-bold uppercase tracking-[1.2px] text-xs">Largo (cm)</th>
             </tr>
           </thead>
           <tbody>
@@ -176,15 +164,11 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
     try {
       setSubmitting(true);
       await createReview(productId, { rating, title, description });
-      toast.success("¡Reseña publicada correctamente!", {
-        title: "Reseña enviada",
-      });
+      toast.success("¡Reseña publicada correctamente!", { title: "Reseña enviada" });
       onReviewCreated();
       onClose();
     } catch (error) {
-      toast.error(error.message || "No se pudo publicar la reseña.", {
-        title: "Error",
-      });
+      toast.error(error.message || "No se pudo publicar la reseña.", { title: "Error" });
     } finally {
       setSubmitting(false);
     }
@@ -221,9 +205,7 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
                   key={star}
                   type="button"
                   className={`text-lg leading-none transition-colors ${
-                    star <= (hoveredRating || rating)
-                      ? "text-primary"
-                      : "text-secondary"
+                    star <= (hoveredRating || rating) ? "text-primary" : "text-secondary"
                   }`}
                   onMouseEnter={() => setHoveredRating(star)}
                   onMouseLeave={() => setHoveredRating(0)}
@@ -234,15 +216,11 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
                 </button>
               ))}
             </div>
-            {rating > 0 && (
-              <p className="text-xs text-tertiary">{rating} / 10</p>
-            )}
+            {rating > 0 && <p className="text-xs text-tertiary">{rating} / 10</p>}
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase tracking-[1.2px] block">
-              Título
-            </label>
+            <label className="text-xs font-bold uppercase tracking-[1.2px] block">Título</label>
             <input
               type="text"
               required
@@ -255,9 +233,7 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase tracking-[1.2px] block">
-              Comentario
-            </label>
+            <label className="text-xs font-bold uppercase tracking-[1.2px] block">Comentario</label>
             <textarea
               required
               maxLength={500}
@@ -295,7 +271,6 @@ export function ProductDetailPage() {
   const [selectedColorId, setSelectedColorId] = useState(null);
   const [selectedSizeId, setSelectedSizeId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isOwner, setIsOwner] = useState(false);
 
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -303,7 +278,8 @@ export function ProductDetailPage() {
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
-  const canReview = isAuthenticated && currentUser?.role === ROLES.BUYER;
+  const isOwner = product?.owner?.id === currentUser?.id;
+  const canReview = isAuthenticated && currentUser?.role?.code === ROLES.BUYER;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -317,15 +293,12 @@ export function ProductDetailPage() {
         const firstVariant = data.variants?.[0] ?? null;
         const firstColor = firstVariant ? getColor(firstVariant) : null;
         const firstSize = firstVariant ? getSize(firstVariant) : null;
-        const firstImage =
-          data.coverImagePath ?? firstVariant?.images?.[0]?.path ?? null;
+        const firstImage = data.coverImagePath ?? firstVariant?.images?.[0]?.path ?? null;
 
         setSelectedColorId(firstColor?.id ?? null);
         setSelectedSizeId(firstSize?.id ?? null);
         setSelectedImage(firstImage);
-        setIsOwner(data.owner.id === currentUser?.id);
       } catch (error) {
-        console.error("Error fetching product details:", error);
         setError(error);
       } finally {
         setLoading(false);
@@ -333,62 +306,45 @@ export function ProductDetailPage() {
     };
 
     fetchProduct();
-  }, [productId, currentUser]);
+  }, [productId]);
 
-  async function fetchReviews() {
+  const fetchReviews = useCallback(async () => {
     try {
       setReviewsLoading(true);
       const data = await getReviewsByProductId(productId);
       setReviews(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error fetching reviews:", err);
       toast.error("No se pudieron cargar las reseñas.", { title: "Error" });
     } finally {
       setReviewsLoading(false);
     }
-  }
+  }, [productId, toast]);
 
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        setReviewsLoading(true);
-        const data = await getReviewsByProductId(productId);
-        setReviews(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error fetching reviews:", err);
-        toast.error("No se pudieron cargar las reseñas.");
-      } finally {
-        setReviewsLoading(false);
-      }
-    };
-
     fetchReviews();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]); // La dependencia de productId es correcta aquí
+  }, [fetchReviews]);
 
-  const colors = useMemo(() => {
-    return getUniqueColors(product?.variants ?? []);
-  }, [product]);
+  const colors = useMemo(() => getUniqueColors(product?.variants ?? []), [product]);
 
-  const availableSizes = useMemo(() => {
-    return getSizesByColor(product?.variants ?? [], selectedColorId);
-  }, [product, selectedColorId]);
+  const availableSizes = useMemo(
+    () => getSizesByColor(product?.variants ?? [], selectedColorId),
+    [product, selectedColorId],
+  );
 
-  const selectedVariant = useMemo(() => {
-    return findVariantByColorAndSize(
-      product?.variants ?? [],
-      selectedColorId,
-      selectedSizeId,
-    );
-  }, [product, selectedColorId, selectedSizeId]);
+  const selectedVariant = useMemo(
+    () => findVariantByColorAndSize(product?.variants ?? [], selectedColorId, selectedSizeId),
+    [product, selectedColorId, selectedSizeId],
+  );
 
-  const selectedSize = useMemo(() => {
-    return availableSizes.find((size) => size.id === selectedSizeId) ?? null;
-  }, [availableSizes, selectedSizeId]);
+  const selectedSize = useMemo(
+    () => availableSizes.find((size) => size.id === selectedSizeId) ?? null,
+    [availableSizes, selectedSizeId],
+  );
 
-  const selectedColor = useMemo(() => {
-    return colors.find((color) => color.id === selectedColorId) ?? null;
-  }, [colors, selectedColorId]);
+  const selectedColor = useMemo(
+    () => colors.find((color) => color.id === selectedColorId) ?? null,
+    [colors, selectedColorId],
+  );
 
   const selectedColorImages = useMemo(() => {
     const images = getImagesByColor(product?.variants ?? [], selectedColorId);
@@ -408,9 +364,10 @@ export function ProductDetailPage() {
     return Math.round((sum / reviews.length) * 10) / 10;
   }, [reviews]);
 
-  const displayedImage = useMemo(() => {
-    return selectedColorImages?.[0]?.path ?? product?.coverImagePath;
-  }, [selectedColorImages, product]);
+  const displayedImage = useMemo(
+    () => selectedColorImages?.[0]?.path ?? product?.coverImagePath,
+    [selectedColorImages, product],
+  );
 
   function handleColorSelect(colorId) {
     setSelectedColorId(colorId);
@@ -445,10 +402,7 @@ export function ProductDetailPage() {
       return;
     }
 
-    toast.success(result.payload.message, {
-      title: "¡Éxito!",
-      duration: 3500,
-    });
+    toast.success(result.payload.message, { title: "¡Éxito!", duration: 3500 });
   };
 
   if (loading || authLoading) {
@@ -477,9 +431,7 @@ export function ProductDetailPage() {
 
   return (
     <div className="bg-neutral min-h-screen">
-      {showSizeGuide && (
-        <SizeGuideModal onClose={() => setShowSizeGuide(false)} />
-      )}
+      {showSizeGuide && <SizeGuideModal onClose={() => setShowSizeGuide(false)} />}
       {showReviewModal && (
         <ReviewModal
           productId={productId}
@@ -503,13 +455,8 @@ export function ProductDetailPage() {
                     type="button"
                     onClick={() => {
                       const current = selectedImage ?? displayedImage;
-                      const idx = imagesToShow.findIndex(
-                        (img) => img.path === current,
-                      );
-                      const prev =
-                        imagesToShow[
-                          (idx - 1 + imagesToShow.length) % imagesToShow.length
-                        ];
+                      const idx = imagesToShow.findIndex((img) => img.path === current);
+                      const prev = imagesToShow[(idx - 1 + imagesToShow.length) % imagesToShow.length];
                       setSelectedImage(prev.path);
                     }}
                     className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border border-secondary w-9 h-9 flex items-center justify-center transition-opacity cursor-pointer"
@@ -521,11 +468,8 @@ export function ProductDetailPage() {
                     type="button"
                     onClick={() => {
                       const current = selectedImage ?? displayedImage;
-                      const idx = imagesToShow.findIndex(
-                        (img) => img.path === current,
-                      );
-                      const next =
-                        imagesToShow[(idx + 1) % imagesToShow.length];
+                      const idx = imagesToShow.findIndex((img) => img.path === current);
+                      const next = imagesToShow[(idx + 1) % imagesToShow.length];
                       setSelectedImage(next.path);
                     }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border border-secondary w-9 h-9 flex items-center justify-center transition-opacity cursor-pointer"
@@ -562,13 +506,9 @@ export function ProductDetailPage() {
           <div className="space-y-6">
             <div>
               <h1>{product.name}</h1>
-
               <div className="mt-2">
-                <h3>
-                  {formatCurrency(selectedVariant?.price ?? product.price)}
-                </h3>
+                <h3>{formatCurrency(selectedVariant?.price ?? product.price)}</h3>
               </div>
-
               <div className="mt-2 text-sm text-tertiary">
                 Stock disponible: {selectedVariant?.stock ?? 0}
               </div>
@@ -577,16 +517,12 @@ export function ProductDetailPage() {
             <hr className="border-secondary/20" />
 
             <p>{product.description}</p>
+
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="text-sm font-bold uppercase tracking-[1.2px]">
-                  Color
-                </div>
-                <div className="text-sm text-tertiary">
-                  {selectedColor?.value ?? "Seleccionar"}
-                </div>
+                <div className="text-sm font-bold uppercase tracking-[1.2px]">Color</div>
+                <div className="text-sm text-tertiary">{selectedColor?.value ?? "Seleccionar"}</div>
               </div>
-
               <div className="flex gap-3">
                 {colors.map((color) => {
                   const isSelected = selectedColorId === color.id;
@@ -597,9 +533,7 @@ export function ProductDetailPage() {
                       title={color.value}
                       onClick={() => handleColorSelect(color.id)}
                       className={`w-7 h-7 border-2 transition-all ${
-                        isSelected
-                          ? "border-primary scale-110"
-                          : "border-secondary"
+                        isSelected ? "border-primary scale-110" : "border-secondary"
                       }`}
                       style={{ backgroundColor: color.hexColor }}
                     />
@@ -610,10 +544,7 @@ export function ProductDetailPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-bold uppercase tracking-[1.2px]">
-                  Talla
-                </div>
-
+                <div className="text-sm font-bold uppercase tracking-[1.2px]">Talla</div>
                 <button
                   type="button"
                   onClick={() => setShowSizeGuide(true)}
@@ -622,7 +553,6 @@ export function ProductDetailPage() {
                   Guía de tallas
                 </button>
               </div>
-
               <div className="flex gap-3">
                 {availableSizes.map((size) => {
                   const isSelected = selectedSizeId === size.id;
@@ -654,11 +584,7 @@ export function ProductDetailPage() {
                 {selectedVariant?.stock > 0 ? "Añadir al carrito" : "Sin stock"}
               </Button>
             ) : (
-              <Button
-                to={`/sell/edit/${product.id}`}
-                fullWidth
-                variant="outline"
-              >
+              <Button to={`/sell/edit/${product.id}`} fullWidth variant="outline">
                 <PencilIcon size={18} />
                 Editar producto
               </Button>
@@ -674,33 +600,24 @@ export function ProductDetailPage() {
               <div className="mb-1">
                 <h3>Reseñas</h3>
               </div>
-
               {reviews.length > 0 && (
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <StarIcon
                       key={star}
                       size={16}
-                      className={
-                        star <= Math.round(rating / 2)
-                          ? "text-primary"
-                          : "text-tertiary"
-                      }
+                      className={star <= Math.round(rating / 2) ? "text-primary" : "text-tertiary"}
                     />
                   ))}
                   <div className="text-sm text-tertiary ml-1">
-                    {rating}/10 ({reviews.length} reseña
-                    {reviews.length !== 1 ? "s" : ""})
+                    {rating}/10 ({reviews.length} reseña{reviews.length !== 1 ? "s" : ""})
                   </div>
                 </div>
               )}
             </div>
 
             {canReview ? (
-              <Button
-                variant="outline"
-                onClick={() => setShowReviewModal(true)}
-              >
+              <Button variant="outline" onClick={() => setShowReviewModal(true)}>
                 Escribir reseña
               </Button>
             ) : isAuthenticated && !canReview ? (
@@ -721,31 +638,22 @@ export function ProductDetailPage() {
           ) : reviews.length > 0 ? (
             <div className="space-y-8">
               {reviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="border-b border-secondary/20 pb-8"
-                >
+                <div key={review.id} className="border-b border-secondary/20 pb-8">
                   <div className="flex items-center gap-2 mb-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <StarIcon
                         key={star}
                         size={14}
                         className={
-                          star <= Math.round(review.rating / 2)
-                            ? "text-primary"
-                            : "text-tertiary"
+                          star <= Math.round(review.rating / 2) ? "text-primary" : "text-tertiary"
                         }
                       />
                     ))}
-                    <span className="text-xs text-tertiary ml-1">
-                      {review.rating}/10
-                    </span>
+                    <span className="text-xs text-tertiary ml-1">{review.rating}/10</span>
                   </div>
-
                   <div className="text-sm font-bold uppercase tracking-[1.2px] mb-2">
                     {review.title}
                   </div>
-
                   <p className="text-sm text-tertiary">{review.description}</p>
                 </div>
               ))}
