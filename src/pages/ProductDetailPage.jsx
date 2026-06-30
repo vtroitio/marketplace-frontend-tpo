@@ -1,14 +1,27 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useCart } from "../cart/CartContext";
 import { useToast } from "../toast/ToastContext";
 import { Button, Spinner } from "../components/ui";
 import { CartIcon, PencilIcon, StarIcon } from "../components/icons";
-import { getProductById } from "../api/products";
-import { getReviewsByProductId, createReview } from "../api/reviews";
 import { formatCurrency } from "../helpers/formatters";
 import { ROLES } from "../helpers/roles";
-import { addItem } from "../features/cart";
+
+import {
+  fetchProductById,
+  selectProduct,
+  selectProductLoading,
+  selectProductError,
+} from "../features/productDetail";
+
+import {
+  fetchReviews,
+  createProductReview,
+  selectReviews,
+  selectReviewsLoading,
+  selectReviewsCreating,
+} from "../features/reviews";
 
 const ATTRIBUTES = {
   COLOR: "COLOR",
@@ -156,14 +169,15 @@ function SizeGuideModal({ onClose }) {
   );
 }
 
-function ReviewModal({ productId, onClose, onReviewCreated }) {
+function ReviewModal({ productId, onClose }) {
+  const dispatch = useDispatch();
   const toast = useToast();
+  const creating = useSelector(selectReviewsCreating);
 
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -174,19 +188,21 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
     }
 
     try {
-      setSubmitting(true);
-      await createReview(productId, { rating, title, description });
+      await dispatch(
+        createProductReview({
+          productId,
+          reviewData: { rating, title, description },
+        }),
+      ).unwrap();
+
       toast.success("¡Reseña publicada correctamente!", {
         title: "Reseña enviada",
       });
-      onReviewCreated();
       onClose();
     } catch (error) {
-      toast.error(error.message || "No se pudo publicar la reseña.", {
+      toast.error(error || "No se pudo publicar la reseña.", {
         title: "Error",
       });
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -269,8 +285,8 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
             />
           </div>
 
-          <Button type="submit" fullWidth disabled={submitting}>
-            {submitting ? "Publicando..." : "Publicar reseña"}
+          <Button type="submit" fullWidth disabled={creating}>
+            {creating ? "Publicando..." : "Publicar reseña"}
           </Button>
         </form>
       </div>
@@ -279,92 +295,56 @@ function ReviewModal({ productId, onClose, onReviewCreated }) {
 }
 
 export function ProductDetailPage() {
-  const dispatch = useDispatch();
   const { productId } = useParams();
+  const dispatch = useDispatch();
+  const { addItem } = useCart();
   const toast = useToast();
-  const currentUser = useSelector((state) => state.auth.user);
-  const authLoading = useSelector(
-    (state) => state.auth.loading || !state.auth.initialized,
-  );
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [product, setProduct] = useState(null);
+  const product = useSelector(selectProduct);
+  const productLoading = useSelector(selectProductLoading);
+  const productError = useSelector(selectProductError);
+
+  const reviews = useSelector(selectReviews);
+  const reviewsLoading = useSelector(selectReviewsLoading);
+
+  const user = useSelector((state) => state.auth.user);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const [selectedColorId, setSelectedColorId] = useState(null);
   const [selectedSizeId, setSelectedSizeId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isOwner, setIsOwner] = useState(false);
-
-  const [reviews, setReviews] = useState([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
-  const canReview = isAuthenticated && currentUser?.role === ROLES.BUYER;
+  const isOwner = useMemo(
+    () => Boolean(product) && product.owner?.id === user?.id,
+    [product, user],
+  );
+
+  const canReview =
+    isAuthenticated && user?.role?.code === ROLES.BUYER && !isOwner;
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const data = await getProductById(productId);
-        setProduct(data);
-
-        const firstVariant = data.variants?.[0] ?? null;
-        const firstColor = firstVariant ? getColor(firstVariant) : null;
-        const firstSize = firstVariant ? getSize(firstVariant) : null;
-        const firstImage =
-          data.coverImagePath ?? firstVariant?.images?.[0]?.path ?? null;
-
-        setSelectedColorId(firstColor?.id ?? null);
-        setSelectedSizeId(firstSize?.id ?? null);
-        setSelectedImage(firstImage);
-        setIsOwner(data.owner.id === currentUser?.id);
-      } catch (error) {
-        console.error("Error fetching product details:", error);
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [productId, currentUser]);
-
-  async function fetchReviews() {
-    try {
-      setReviewsLoading(true);
-      const data = await getReviewsByProductId(productId);
-      setReviews(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Error fetching reviews:", err);
-      toast.error("No se pudieron cargar las reseñas.", { title: "Error" });
-    } finally {
-      setReviewsLoading(false);
-    }
-  }
+    dispatch(fetchProductById(productId));
+  }, [dispatch, productId]);
 
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        setReviewsLoading(true);
-        const data = await getReviewsByProductId(productId);
-        setReviews(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error fetching reviews:", err);
-        toast.error("No se pudieron cargar las reseñas.");
-      } finally {
-        setReviewsLoading(false);
-      }
-    };
+    dispatch(fetchReviews(productId));
+  }, [dispatch, productId]);
 
-    fetchReviews();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]); // La dependencia de productId es correcta aquí
+  useEffect(() => {
+    if (!product) return;
+
+    const firstVariant = product.variants?.[0] ?? null;
+    const firstColor = firstVariant ? getColor(firstVariant) : null;
+    const firstSize = firstVariant ? getSize(firstVariant) : null;
+    const firstImage =
+      product.coverImagePath ?? firstVariant?.images?.[0]?.path ?? null;
+
+    setSelectedColorId(firstColor?.id ?? null);
+    setSelectedSizeId(firstSize?.id ?? null);
+    setSelectedImage(firstImage);
+  }, [product]);
 
   const colors = useMemo(() => {
     return getUniqueColors(product?.variants ?? []);
@@ -421,23 +401,21 @@ export function ProductDetailPage() {
   }
 
   const handleAddToCart = async () => {
-    const result = await dispatch(
-      addItem({
-        id: selectedVariant.id,
-        productId: product.id,
-        name: product.name,
-        size: selectedSize,
-        color: selectedColor,
-        price: selectedVariant.price,
-        quantity: 1,
-        maxStock: selectedVariant.stock,
-        image: product.coverImagePath,
-      }),
-    );
+    const result = await addItem({
+      id: selectedVariant.id,
+      productId: product.id,
+      name: product.name,
+      size: selectedSize,
+      color: selectedColor,
+      price: selectedVariant.price,
+      quantity: 1,
+      maxStock: selectedVariant.stock,
+      image: product.coverImagePath,
+    });
 
-    if (!result.payload.ok) {
-      if (result.payload.status === "STOCK_LIMIT") {
-        toast.error(result.payload.message, {
+    if (!result.ok) {
+      if (result.status === "STOCK_LIMIT") {
+        toast.error(result.message, {
           title: "Limite de stock alcanzado",
           duration: 3500,
         });
@@ -445,32 +423,27 @@ export function ProductDetailPage() {
       return;
     }
 
-    toast.success(result.payload.message, {
+    toast.success(result.message, {
       title: "¡Éxito!",
       duration: 3500,
     });
   };
 
-  if (loading || authLoading) {
+  const productMatches =
+    Boolean(product) && String(product.id) === String(productId);
+
+  if (productError && !productMatches) {
+    return (
+      <div className="bg-neutral min-h-screen flex items-center justify-center">
+        <span className="text-primary">Error: {productError}</span>
+      </div>
+    );
+  }
+
+  if (!productMatches || productLoading) {
     return (
       <div className="bg-neutral min-h-screen flex items-center justify-center">
         <Spinner />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-neutral min-h-screen flex items-center justify-center">
-        <span className="text-primary">Error: {error.message}</span>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="bg-neutral min-h-screen flex items-center justify-center">
-        <span className="text-primary">No se encontró el producto.</span>
       </div>
     );
   }
@@ -484,7 +457,6 @@ export function ProductDetailPage() {
         <ReviewModal
           productId={productId}
           onClose={() => setShowReviewModal(false)}
-          onReviewCreated={fetchReviews}
         />
       )}
 
