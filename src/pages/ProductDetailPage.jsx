@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useCart } from "../cart/CartContext";
 import { useToast } from "../toast/ToastContext";
 import { Button, Spinner } from "../components/ui";
 import { CartIcon, PencilIcon, StarIcon } from "../components/icons";
 import { formatCurrency } from "../helpers/formatters";
 import { ROLES } from "../helpers/roles";
+
+import { addItem } from "../features/cart";
 
 import {
   fetchProductById,
@@ -297,7 +298,6 @@ function ReviewModal({ productId, onClose }) {
 export function ProductDetailPage() {
   const { productId } = useParams();
   const dispatch = useDispatch();
-  const { addItem } = useCart();
   const toast = useToast();
 
   const product = useSelector(selectProduct);
@@ -401,7 +401,7 @@ export function ProductDetailPage() {
   }
 
   const handleAddToCart = async () => {
-    const result = await addItem({
+    const result = await dispatch(addItem({
       id: selectedVariant.id,
       productId: product.id,
       name: product.name,
@@ -411,19 +411,25 @@ export function ProductDetailPage() {
       quantity: 1,
       maxStock: selectedVariant.stock,
       image: product.coverImagePath,
-    });
+    }));
 
-    if (!result.ok) {
-      if (result.status === "STOCK_LIMIT") {
-        toast.error(result.message, {
+    if (!result.payload.ok) {
+      if (result.payload.status === "STOCK_LIMIT") {
+        toast.error(result.payload.message, {
           title: "Limite de stock alcanzado",
+          duration: 3500,
+        });
+      }
+      if (result.payload.status === "ERROR") {
+        toast.error(result.payload.message, {
+          title: "Error al agregar al carrito",
           duration: 3500,
         });
       }
       return;
     }
 
-    toast.success(result.message, {
+    toast.success(result.payload.message, {
       title: "¡Éxito!",
       duration: 3500,
     });
@@ -515,7 +521,7 @@ export function ProductDetailPage() {
                   key={image.id ?? index}
                   type="button"
                   onClick={() => setSelectedImage(image.path)}
-                  className={`border-2 overflow-hidden w-24 h-24 flex-shrink-0 ${
+                  className={`border-2 overflow-hidden w-24 h-24 shrink-0 ${
                     (selectedImage ?? displayedImage) === image.path
                       ? "border-primary"
                       : "border-secondary"
