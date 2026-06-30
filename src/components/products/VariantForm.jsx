@@ -19,6 +19,7 @@ export function VariantForm({
   index,
   group,
   attributes,
+  usedColorIds = [],
   onChange,
   onRemoveVariantGroup,
   canRemove,
@@ -118,11 +119,13 @@ export function VariantForm({
             onChange={(e) => handleColorChange(e.target.value)}
             placeholder="Seleccionar"
           >
-            {colors.map((color) => (
-              <option key={color.id} value={color.code}>
-                {color.value}
-              </option>
-            ))}
+            {colors
+              .filter((color) => !usedColorIds.includes(color.id))
+              .map((color) => (
+                <option key={color.id} value={color.code}>
+                  {color.value}
+                </option>
+              ))}
           </Select>
         </div>
 
