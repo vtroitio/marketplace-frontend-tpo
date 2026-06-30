@@ -6,15 +6,16 @@ import { Button } from "../components/ui/Button";
 import { CouponIcon } from "../components/icons";
 import { useToast } from "../toast/ToastContext";
 import { formatCurrency } from "../helpers/formatters";
-import { checkoutOrder } from "../api/orders";
-import { validateCoupon } from "../api/coupons";
 import {
-  validateCartForCheckout,
-  reloadCart,
-  selectCartSubtotal,
-} from "../features/cart";
-
-const shippingCost = 15.0;
+  applyCheckoutCoupon,
+  confirmCheckout,
+  initializeCheckout,
+  removeCheckoutCoupon,
+  selectCheckoutTotal,
+  setCouponCode,
+  CHECKOUT_SHIPPING_COST,
+} from "../features/checkout";
+import { selectCartSubtotal } from "../features/cart";
 
 const emptyCheckoutForm = {
   fullName: "",
@@ -51,11 +52,13 @@ export function Checkout() {
   const validationStartedRef = useRef(false);
 
   const [formData, setFormData] = useState(emptyCheckoutForm);
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
-  const [couponLoading, setCouponLoading] = useState(false);
-  const [submitLoading, setSubmitLoading] = useState(false);
+  const couponCode = useSelector((state) => state.checkout.couponCode);
+  const appliedCoupon = useSelector((state) => state.checkout.appliedCoupon);
+  const discountAmount = useSelector((state) => state.checkout.discountAmount);
+  const total = useSelector(selectCheckoutTotal);
+  const couponLoading = useSelector((state) => state.checkout.applyingCoupon);
+  const submitLoading = useSelector((state) => state.checkout.submitting);
 
   useEffect(() => {
     if (authLoading) return;
@@ -64,19 +67,19 @@ export function Checkout() {
 
     validationStartedRef.current = true;
 
-    async function validate() {
-      const result = await dispatch(validateCartForCheckout());
+    async function initialize() {
+      const result = await dispatch(initializeCheckout());
 
-      if (!result.payload.ok) {
-        toast.warning(result.payload.message, {
+      if (initializeCheckout.rejected.match(result)) {
+        toast.warning(result.payload?.message || "Carrito actualizado", {
           title: "Carrito actualizado",
         });
 
-        navigate("/cart", { replace: true });
+        navigate(result.payload?.redirectTo || "/cart", { replace: true });
       }
     }
 
-    validate();
+    initialize();
   }, [dispatch, authLoading, isAuthenticated, navigate, toast]);
 
   if (authLoading || cartLoading) {
@@ -95,9 +98,6 @@ export function Checkout() {
     return <Navigate to="/cart" replace />;
   }
 
-  const discountAmount = appliedCoupon?.discountAmount ?? 0;
-  const total = subtotal - discountAmount + shippingCost;
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -108,43 +108,24 @@ export function Checkout() {
   };
 
   const handleApplyCoupon = async () => {
-    const normalizedCode = couponCode.trim();
-
-    if (!normalizedCode) {
-      toast.warning("Ingresá un código de cupón.", {
-        title: "Cupón vacío",
-      });
-      return;
-    }
-
     try {
-      setCouponLoading(true);
+      const response = await dispatch(applyCheckoutCoupon());
 
-      const response = await validateCoupon(normalizedCode);
-
-      setAppliedCoupon({
-        code: response.code,
-        discountAmount: Number(response.discountAmount),
-        totalAfterDiscount: Number(response.totalAfterDiscount),
-      });
-
-      toast.success(response.message || "Cupón aplicado correctamente.", {
-        title: "Cupón aplicado",
-      });
+      toast.success(
+        response.payload.message || "Cupón aplicado correctamente.",
+        {
+          title: "Cupón aplicado",
+        },
+      );
     } catch (error) {
-      setAppliedCoupon(null);
-
-      toast.error(error.message || "No se pudo aplicar el cupón.", {
+      toast.error(error.payload?.message || "No se pudo aplicar el cupón.", {
         title: "Cupón inválido",
       });
-    } finally {
-      setCouponLoading(false);
     }
   };
 
   const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-    setCouponCode("");
+    dispatch(removeCheckoutCoupon());
 
     toast.info("Cupón removido.", {
       title: "Cupón",
@@ -154,45 +135,19 @@ export function Checkout() {
   const handleConfirmPayment = async (e) => {
     e.preventDefault();
 
-    try {
-      setSubmitLoading(true);
+    const result = await dispatch(confirmCheckout(formData));
 
-      const validationResult = await dispatch(validateCartForCheckout());
-
-      if (!validationResult.payload.ok) {
-        toast.warning(validationResult.payload.message, {
-          title: "Carrito actualizado",
-        });
-
-        navigate("/cart", { replace: true });
-        return;
-      }
-
-      const order = await checkoutOrder({
-        fullName: formData.fullName,
-        address: formData.address,
-        city: formData.city,
-        postalCode: formData.postalCode,
-        couponCode: appliedCoupon?.code ?? couponCode.trim() ?? null,
-        cardNumber: formData.cardNumber,
-        cardExpiration: formData.cardExpiration,
-        cardCvv: formData.cardCvv,
-      });
-
-      await dispatch(reloadCart?.());
-
-      toast.success("La orden fue creada correctamente.", {
-        title: "Compra confirmada",
-      });
-
-      navigate(`/orders/${order.id}`, { replace: true });
-    } catch (error) {
-      toast.error(error.message || "No se pudo confirmar la compra.", {
+    if (result.payload.paymentStatus !== "APPROVED") {
+      toast.error(result.payload.message || "No se pudo confirmar la compra.", {
         title: "Error en checkout",
       });
-    } finally {
-      setSubmitLoading(false);
+      navigate("/cart", { replace: true });
+      return;
     }
+
+    toast.success("La orden fue creada correctamente.", {
+      title: "Compra confirmada",
+    });
   };
 
   return (
@@ -351,7 +306,7 @@ export function Checkout() {
                 placeholder="Ingresá tu código"
                 name="couponCode"
                 value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
+                onChange={(e) => dispatch(setCouponCode(e.target.value))}
                 disabled={couponLoading || Boolean(appliedCoupon)}
               />
 
@@ -393,7 +348,7 @@ export function Checkout() {
 
               <div className="flex justify-between">
                 <span>Costo de envío</span>
-                <strong>{formatCurrency(shippingCost)}</strong>
+                <strong>{formatCurrency(CHECKOUT_SHIPPING_COST)}</strong>
               </div>
             </div>
           </div>
