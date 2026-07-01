@@ -18,17 +18,25 @@ export function ProductVariants({
         </Button>
       </div>
 
-      {variantGroups?.map((group, index) => (
-        <VariantForm
-          key={group.colorAttributeValueId ?? index}
-          index={index}
-          group={group}
-          attributes={attributes}
-          onChange={onVariantGroupChange}
-          onRemoveVariantGroup={onRemoveVariantGroup}
-          canRemove={variantGroups.length > 1}
-        />
-      ))}
+      {variantGroups?.map((group, index) => {
+        const usedColorIds = variantGroups
+          .filter((_, i) => i !== index)
+          .map((g) => g.colorAttributeValueId)
+          .filter(Boolean);
+
+        return (
+          <VariantForm
+            key={group.colorAttributeValueId ?? index}
+            index={index}
+            group={group}
+            attributes={attributes}
+            usedColorIds={usedColorIds}
+            onChange={onVariantGroupChange}
+            onRemoveVariantGroup={onRemoveVariantGroup}
+            canRemove={variantGroups.length > 1}
+          />
+        );
+      })}
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { formatCurrency } from "../../helpers/formatters";
+import { formatCurrency, getImageUrl } from "../../helpers/formatters";
 
 export function Card({
   image,
@@ -37,7 +37,7 @@ export function Card({
           className={`min-h-0 flex-1 overflow-hidden bg-neutral ${styles.image}`}
         >
           <img
-            src={image}
+            src={getImageUrl(image)}
             alt={imageAlt || title}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
