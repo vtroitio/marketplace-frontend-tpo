@@ -1,13 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Button, Spinner } from "../../components/ui";
 import { InventoryTable } from "../../components/products";
 import { SearchBar } from "../../components/ui/SearchBar";
 import {
-  getOwnedProducts,
-  deleteProduct,
-  activateProduct,
-  deactivateProduct,
-} from "../../api/products";
+  fetchOwnedProducts,
+  removeProduct,
+  toggleProductActive,
+  setPage,
+  selectOwnedProducts,
+  selectProductsLoading,
+  selectProductsError,
+  selectProductsPage,
+  selectProductsTotalPages,
+  selectProductsTotalElements,
+} from "../../features/products";
 
 const PAGE_SIZE = 5;
 const ROW_HEIGHT = 144;
@@ -25,68 +32,29 @@ function getPageWindow(page, totalPages) {
 }
 
 export function SellerView() {
-  const [products, setProducts] = useState([]);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [pageLoading, setPageLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const dispatch = useDispatch();
+
+  const products = useSelector(selectOwnedProducts);
+  const loading = useSelector(selectProductsLoading);
+  const error = useSelector(selectProductsError);
+  const page = useSelector(selectProductsPage);
+  const totalPages = useSelector(selectProductsTotalPages);
+  const totalElements = useSelector(selectProductsTotalElements);
 
   useEffect(() => {
-    const fetchOwnedProducts = async () => {
-      try {
-        if (page === 0 && totalElements === 0) {
-          setInitialLoading(true);
-        } else {
-          setPageLoading(true);
-        }
-        const data = await getOwnedProducts(page);
-        setProducts(data?.content || []);
-        setTotalPages(data?.totalPages || 0);
-        setTotalElements(data?.totalElements || 0);
-      } catch (error) {
-        setError("Ocurrió un error al cargar tus productos");
-      } finally {
-        setInitialLoading(false);
-        setPageLoading(false);
-      }
-    };
-    fetchOwnedProducts();
-  }, [page, refreshKey]);
+    dispatch(fetchOwnedProducts(page));
+  }, [dispatch, page]);
 
-  const handleToggleActive = async (productId, isActive) => {
-    try {
-      if (isActive) {
-        await deactivateProduct(productId);
-      } else {
-        await activateProduct(productId);
-      }
-      setProducts((prev) =>
-        prev.map((p) => p.id === productId ? { ...p, isActive: !p.isActive } : p)
-      );
-    } catch (error) {
-      // error al cambiar estado
-    }
+  const handleToggleActive = (productId, isActive) => {
+    dispatch(toggleProductActive({ productId, isActive }));
   };
 
-  const handleDeleteProduct = async (productId) => {
-    try {
-      await deleteProduct(productId);
-      const newTotal = totalElements - 1;
-      const newTotalPages = Math.ceil(newTotal / PAGE_SIZE);
-      const newPage = page >= newTotalPages ? Math.max(0, newTotalPages - 1) : page;
-      setTotalElements(newTotal);
-      setTotalPages(newTotalPages);
-      if (newPage !== page) {
-        setPage(newPage);
-      } else {
-        setRefreshKey((k) => k + 1);
-      }
-    } catch (error) {
-      // error al eliminar
-    }
+  const handleDeleteProduct = (productId) => {
+    dispatch(removeProduct(productId));
+  };
+
+  const handlePageChange = (newPage) => {
+    dispatch(setPage(newPage));
   };
 
   const pageWindow = getPageWindow(page, totalPages);
@@ -109,7 +77,7 @@ export function SellerView() {
         </div>
       </div>
 
-      {initialLoading ? (
+      {loading && products.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-16">
           <Spinner />
         </div>
@@ -123,12 +91,12 @@ export function SellerView() {
             </p>
           </div>
         </div>
-      ) : products.length || pageLoading ? (
+      ) : products.length > 0 || loading ? (
         <div className="flex flex-col gap-4 my-8">
           <SearchBar />
           <div
             style={{
-              opacity: pageLoading ? 0.4 : 1,
+              opacity: loading ? 0.4 : 1,
               transition: "opacity 0.15s",
               minHeight: `${TABLE_MIN_HEIGHT}px`,
             }}
@@ -144,7 +112,7 @@ export function SellerView() {
               <>
                 <Button
                   variant="outline"
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  onClick={() => handlePageChange(Math.max(0, page - 1))}
                   disabled={page === 0}
                 >
                   ‹
@@ -153,14 +121,14 @@ export function SellerView() {
                   <Button
                     key={i}
                     variant={i === page ? "primary" : "outline"}
-                    onClick={() => setPage(i)}
+                    onClick={() => handlePageChange(i)}
                   >
                     {i + 1}
                   </Button>
                 ))}
                 <Button
                   variant="outline"
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  onClick={() => handlePageChange(Math.min(totalPages - 1, page + 1))}
                   disabled={page === totalPages - 1}
                 >
                   ›
