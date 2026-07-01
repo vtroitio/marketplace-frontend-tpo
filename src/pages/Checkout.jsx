@@ -4,9 +4,14 @@ import { useSelector, useDispatch } from "react-redux";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { CouponIcon } from "../components/icons";
+import { CardBrandIcon } from "../components/payment";
 import { useToast } from "../toast/ToastContext";
 import { formatCurrency } from "../helpers/formatters";
-import { validatePaymentData } from "../helpers/paymentValidation";
+import {
+  validatePaymentData,
+  getCardNumberInfo,
+  formatCardNumber,
+} from "../helpers/paymentValidation";
 import {
   applyCheckoutCoupon,
   confirmCheckout,
@@ -56,6 +61,14 @@ export function Checkout() {
   const [formData, setFormData] = useState(emptyCheckoutForm);
   const [paymentErrors, setPaymentErrors] = useState({});
 
+  const [cardInfo, setCardInfo] = useState({
+    cardType: null,
+    cardName: null,
+    cvvLength: 3,
+    isPotentiallyValid: true,
+    isValid: false,
+  });
+
   const couponCode = useSelector((state) => state.checkout.couponCode);
   const appliedCoupon = useSelector((state) => state.checkout.appliedCoupon);
   const discountAmount = useSelector((state) => state.checkout.discountAmount);
@@ -104,14 +117,28 @@ export function Checkout() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
     setPaymentErrors((prev) => ({
       ...prev,
       [name]: null,
+    }));
+
+    if (name === "cardNumber") {
+      const formattedCardNumber = formatCardNumber(value);
+      const nextCardInfo = getCardNumberInfo(formattedCardNumber);
+
+      setFormData((prev) => ({
+        ...prev,
+        cardNumber: formattedCardNumber,
+      }));
+
+      setCardInfo(nextCardInfo);
+
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
@@ -256,15 +283,21 @@ export function Checkout() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Input
-                  label="Número de tarjeta"
-                  type="text"
-                  name="cardNumber"
-                  value={formData.cardNumber}
-                  onChange={handleChange}
-                  placeholder="0000 0000 0000 0000"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    label="Número de tarjeta"
+                    type="text"
+                    name="cardNumber"
+                    value={formData.cardNumber}
+                    onChange={handleChange}
+                    placeholder="0000 0000 0000 0000"
+                    required
+                  />
+                  <CardBrandIcon
+                    className="absolute bottom-5 right-4"
+                    cardType={cardInfo.cardType}
+                  />
+                </div>
                 {paymentErrors.cardNumber && (
                   <p className="text-primary">{paymentErrors.cardNumber}</p>
                 )}
