@@ -1,11 +1,18 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer, cartReducer, productDetailReducer, reviewsReducer } from "../features";
+import {
+  authReducer,
+  cartReducer,
+  productDetailReducer,
+  reviewsReducer,
+  checkoutReducer,
+} from "../features";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     cart: cartReducer,
     productDetail: productDetailReducer,
-    reviews: reviewsReducer
+    reviews: reviewsReducer,
+    checkout: checkoutReducer,
   },
 });

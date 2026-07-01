@@ -116,14 +116,11 @@ function SizeGuideModal({ onClose }) {
         >
           ✕
         </button>
-
         <h3 className="mb-6">Guía de Tallas</h3>
-
         <p className="text-sm text-tertiary mb-4">
           Medidas en centímetros. Para una mejor experiencia, medí tu cuerpo y
           compará con la tabla.
         </p>
-
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b border-secondary/40">
@@ -151,7 +148,6 @@ function SizeGuideModal({ onClose }) {
             ))}
           </tbody>
         </table>
-
         <p className="text-xs text-tertiary mt-6">
           * Las medidas pueden variar ±1 cm según la prenda. En caso de duda,
           recomendamos elegir la talla superior.
@@ -215,9 +211,7 @@ function ReviewModal({ productId, onClose }) {
         >
           ✕
         </button>
-
         <h3 className="mb-6">Escribir reseña</h3>
-
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <span className="text-xs font-bold uppercase tracking-[1.2px]">
@@ -246,7 +240,6 @@ function ReviewModal({ productId, onClose }) {
               <p className="text-xs text-tertiary">{rating} / 10</p>
             )}
           </div>
-
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase tracking-[1.2px] block">Título</label>
             <input
@@ -259,7 +252,6 @@ function ReviewModal({ productId, onClose }) {
               className="w-full border border-secondary bg-transparent px-4 py-3 text-sm text-secondary placeholder:text-tertiary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
-
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase tracking-[1.2px] block">Comentario</label>
             <textarea
@@ -272,7 +264,6 @@ function ReviewModal({ productId, onClose }) {
               className="w-full border border-secondary bg-transparent px-4 py-3 text-sm text-secondary placeholder:text-tertiary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
             />
           </div>
-
           <Button type="submit" fullWidth disabled={creating}>
             {creating ? "Publicando..." : "Publicar reseña"}
           </Button>
@@ -408,10 +399,19 @@ export function ProductDetailPage() {
           duration: 3500,
         });
       }
+      if (result.payload.status === "ERROR") {
+        toast.error(result.payload.message, {
+          title: "Error al agregar al carrito",
+          duration: 3500,
+        });
+      }
       return;
     }
 
-    toast.success(result.payload.message, { title: "¡Éxito!", duration: 3500 });
+    toast.success(result.payload.message, {
+      title: "¡Éxito!",
+      duration: 3500,
+    });
   };
 
   const productMatches =
@@ -490,7 +490,7 @@ export function ProductDetailPage() {
                   key={image.id ?? index}
                   type="button"
                   onClick={() => setSelectedImage(image.path)}
-                  className={`border-2 overflow-hidden w-24 h-24 flex-shrink-0 ${
+                  className={`border-2 overflow-hidden w-24 h-24 shrink-0 ${
                     (selectedImage ?? displayedImage) === image.path
                       ? "border-primary"
                       : "border-secondary"
