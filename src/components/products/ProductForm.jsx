@@ -88,6 +88,13 @@ export function ProductForm({ data, onSubmit, submitLabel }) {
       return;
     }
 
+    const colorIds = (product.variantGroups ?? []).map((g) => g.colorAttributeValueId).filter(Boolean);
+    const hasDuplicateColors = colorIds.some((id, i) => colorIds.indexOf(id) !== i);
+    if (hasDuplicateColors) {
+      setFormError("No puede haber dos variantes con el mismo color.");
+      return;
+    }
+
     for (const group of product.variantGroups ?? []) {
       if (!group.colorAttributeValueId) {
         setFormError("Seleccioná un color para todas las variantes.");

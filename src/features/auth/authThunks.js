@@ -1,16 +1,14 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  login,
-  register,
-  logout,
-  restoreSession,
-} from "../../api/auth";
+import { login, register, logout, restoreSession } from "../../api/auth";
+import { getProfile } from "../../api/users";
 
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (credentials, { rejectWithValue }) => {
     try {
-      return await login(credentials);
+      const { accessToken } = await login(credentials);
+      const user = await getProfile(accessToken);
+      return { accessToken, user };
     } catch (error) {
       return rejectWithValue(error.message || "Error al iniciar sesión");
     }
@@ -21,7 +19,9 @@ export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (userData, { rejectWithValue }) => {
     try {
-      return await register(userData);
+      const { accessToken } = await register(userData);
+      const user = await getProfile(accessToken);
+      return { accessToken, user };
     } catch (error) {
       return rejectWithValue({
         message: error.message || "Error al registrarse",
@@ -35,7 +35,9 @@ export const restoreUserSession = createAsyncThunk(
   "auth/refresh",
   async (_, { rejectWithValue }) => {
     try {
-      return await restoreSession();
+      const { accessToken } = await restoreSession();
+      const user = await getProfile(accessToken);
+      return { accessToken, user };
     } catch (error) {
       return rejectWithValue(error.message || "Sesión expirada");
     }
