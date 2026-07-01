@@ -8,5 +8,6 @@ export function formatCurrency(price) {
 export function getImageUrl(path) {
   if (!path) return null;
   if (path.startsWith("http")) return path;
-  return `${import.meta.env.VITE_API_URL}${path}`;
+  if (path.startsWith("/uploads/")) return `${import.meta.env.VITE_API_URL}${path}`;
+  return path;
 }

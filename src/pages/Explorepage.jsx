@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, Button, Spinner } from "../components/ui";
 import { SearchBar } from "../components/ui/SearchBar";
 import { getAllProducts, getAttributes, getCategories } from "../api/products";
 
+const REFRESH_INTERVAL = 30_000;
+
 export function ExplorePage() {
-  const [loading, setLoading] = useState(true);
+  const [filtersLoading, setFiltersLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
@@ -16,6 +19,7 @@ export function ExplorePage() {
   const [selectedColors, setSelectedColors] = useState([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
   const [filters, setFilters] = useState({
     page: 0,
     size: 12,
@@ -26,98 +30,103 @@ export function ExplorePage() {
     maxPrice: "",
   });
 
+  const debounceRef = useRef(null);
+
+  // Carga opciones de filtros una sola vez
   useEffect(() => {
     async function fetchFilterOptions() {
       try {
-        setLoading(true);
+        setFiltersLoading(true);
         const [attributesData, categoriesData] = await Promise.all([
           getAttributes(),
           getCategories(),
         ]);
-
         setCategories(categoriesData);
-
         setSizes(
           attributesData.find((attr) => attr.code === "TALLE")?.values || [],
         );
-
         setColors(
           attributesData.find((attr) => attr.code === "COLOR")?.values || [],
         );
       } catch (error) {
-        console.error("Error fetching filter options:", error);
         setError(error);
       } finally {
-        setLoading(false);
+        setFiltersLoading(false);
       }
     }
-
     fetchFilterOptions();
   }, []);
 
+  // Carga productos cuando cambian los filtros o el refreshKey
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setLoading(true);
-
+        setProductsLoading(true);
         const productsData = await getAllProducts(filters);
-
         setProducts(productsData);
       } catch (error) {
-        console.error("Error fetching products:", error);
         setError(error);
       } finally {
-        setLoading(false);
+        setProductsLoading(false);
       }
     };
-
     fetchProducts();
-  }, [filters]);
+  }, [filters, refreshKey]);
 
+  // Auto-refresh cada 30 segundos
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setFilters((prev) => {
-        if (prev.search === search.trim()) {
-          return prev;
-        }
+    const interval = setInterval(() => {
+      setRefreshKey((k) => k + 1);
+    }, REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, []);
 
-        return {
-          ...prev,
-          page: 0,
-          search: search.trim(),
-        };
+  // Debounce de búsqueda al tipear
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.search === search.trim()) return prev;
+        return { ...prev, page: 0, search: search.trim() };
       });
     }, 500);
-
-    return () => clearTimeout(timeoutId);
+    return () => clearTimeout(debounceRef.current);
   }, [search]);
+
+  // Búsqueda inmediata al presionar Enter
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Enter") {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      setFilters((prev) => ({ ...prev, page: 0, search: search.trim() }));
+    }
+  };
 
   const toggleCategory = (cat) => {
     setSelectedCategories((prev) =>
-      prev.some((selectedCat) => selectedCat.id === cat.id)
-        ? prev.filter((selectedCat) => selectedCat.id !== cat.id)
+      prev.some((c) => c.id === cat.id)
+        ? prev.filter((c) => c.id !== cat.id)
         : [...prev, cat],
     );
   };
 
   const toggleSize = (size) => {
     setSelectedSizes((prev) =>
-      prev.some((selectedSize) => selectedSize.id === size.id)
-        ? prev.filter((selectedSize) => selectedSize.id !== size.id)
+      prev.some((s) => s.id === size.id)
+        ? prev.filter((s) => s.id !== size.id)
         : [...prev, size],
     );
   };
 
   const toggleColor = (color) => {
     setSelectedColors((prev) =>
-      prev.some((selectedColor) => selectedColor.id === color.id)
-        ? prev.filter((selectedColor) => selectedColor.id !== color.id)
+      prev.some((c) => c.id === color.id)
+        ? prev.filter((c) => c.id !== color.id)
         : [...prev, color],
     );
   };
 
   const handleFilter = () => {
-    const nextFilters = {
+    setFilters({
       ...filters,
       page: 0,
       categoryIds: selectedCategories.map((cat) => cat.id),
@@ -125,10 +134,32 @@ export function ExplorePage() {
       colorIds: selectedColors.map((color) => color.id),
       minPrice,
       maxPrice,
-    };
-
-    setFilters(nextFilters);
+    });
   };
+
+  const handleClearFilters = () => {
+    setSelectedCategories([]);
+    setSelectedSizes([]);
+    setSelectedColors([]);
+    setMinPrice("");
+    setMaxPrice("");
+    setFilters((prev) => ({
+      ...prev,
+      page: 0,
+      categoryIds: [],
+      sizeIds: [],
+      colorIds: [],
+      minPrice: "",
+      maxPrice: "",
+    }));
+  };
+
+  const activeFiltersCount =
+    selectedCategories.length +
+    selectedSizes.length +
+    selectedColors.length +
+    (minPrice ? 1 : 0) +
+    (maxPrice ? 1 : 0);
 
   if (error) {
     return (
@@ -138,7 +169,7 @@ export function ExplorePage() {
     );
   }
 
-  if (loading) {
+  if (filtersLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spinner />
@@ -153,6 +184,7 @@ export function ExplorePage() {
           <SearchBar
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             placeholder="Buscar prendas..."
           />
         </div>
@@ -161,12 +193,26 @@ export function ExplorePage() {
           <aside className="border border-secondary p-6 space-y-8">
             <div>
               <h3>Filtros</h3>
+              {activeFiltersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="text-xs text-primary underline hover:opacity-70 cursor-pointer mt-1"
+                >
+                  Limpiar filtros ({activeFiltersCount})
+                </button>
+              )}
             </div>
 
             {/* Categoría */}
             <div className="space-y-3">
-              <div className="text-sm font-bold uppercase tracking-[1.2px] text-tertiary">
+              <div className="text-sm font-bold uppercase tracking-[1.2px] text-tertiary flex items-center gap-2">
                 Categoría
+                {selectedCategories.length > 0 && (
+                  <span className="bg-primary text-neutral text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    {selectedCategories.length}
+                  </span>
+                )}
               </div>
               {categories.map((cat) => (
                 <label
@@ -175,9 +221,7 @@ export function ExplorePage() {
                 >
                   <input
                     type="checkbox"
-                    checked={selectedCategories.some(
-                      (selectedCat) => selectedCat.id === cat.id,
-                    )}
+                    checked={selectedCategories.some((c) => c.id === cat.id)}
                     onChange={() => toggleCategory(cat)}
                     className="accent-primary w-4 h-4"
                   />
@@ -188,8 +232,13 @@ export function ExplorePage() {
 
             {/* Talla */}
             <div className="space-y-3">
-              <div className="text-sm font-bold uppercase tracking-[1.2px] text-tertiary">
+              <div className="text-sm font-bold uppercase tracking-[1.2px] text-tertiary flex items-center gap-2">
                 Talla
+                {selectedSizes.length > 0 && (
+                  <span className="bg-primary text-neutral text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    {selectedSizes.length}
+                  </span>
+                )}
               </div>
               {sizes.map((size) => (
                 <label
@@ -198,9 +247,7 @@ export function ExplorePage() {
                 >
                   <input
                     type="checkbox"
-                    checked={selectedSizes.some(
-                      (selectedSize) => selectedSize.id === size.id,
-                    )}
+                    checked={selectedSizes.some((s) => s.id === size.id)}
                     onChange={() => toggleSize(size)}
                     className="accent-primary w-4 h-4"
                   />
@@ -211,15 +258,19 @@ export function ExplorePage() {
 
             {/* Color */}
             <div className="space-y-3">
-              <div className="text-sm font-bold uppercase tracking-[1.2px] text-tertiary">
+              <div className="text-sm font-bold uppercase tracking-[1.2px] text-tertiary flex items-center gap-2">
                 Color
+                {selectedColors.length > 0 && (
+                  <span className="bg-primary text-neutral text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    {selectedColors.length}
+                  </span>
+                )}
               </div>
               <div className="flex flex-wrap gap-2">
                 {colors.map((color) => {
                   const isSelected = selectedColors.some(
-                    (selectedColor) => selectedColor.id === color.id,
+                    (c) => c.id === color.id,
                   );
-
                   return (
                     <button
                       key={color.code}
@@ -265,12 +316,23 @@ export function ExplorePage() {
             <Button fullWidth onClick={handleFilter}>
               Filtrar
             </Button>
+
           </aside>
 
           {/* Grid de productos */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {products?.content?.length > 0 ? (
-              products?.content?.map((product) => (
+          <div
+            className="grid grid-cols-2 md:grid-cols-3 gap-6"
+            style={{
+              opacity: productsLoading ? 0.5 : 1,
+              transition: "opacity 0.2s",
+            }}
+          >
+            {productsLoading && products?.content?.length === 0 ? (
+              <div className="col-span-3 flex justify-center py-20">
+                <Spinner />
+              </div>
+            ) : products?.content?.length > 0 ? (
+              products.content.map((product) => (
                 <Card
                   key={product.id}
                   image={product.coverImagePath}
