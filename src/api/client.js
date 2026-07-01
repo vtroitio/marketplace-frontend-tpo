@@ -1,7 +1,19 @@
+import axios from "axios";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 let refreshPromise = null;
 let storePromise = null;
+
+const apiClient = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+});
+
+const refreshClient = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+});
 
 function getStore() {
   if (!storePromise) {
@@ -21,35 +33,35 @@ async function dispatchRedux(action) {
   store.dispatch(action);
 }
 
-async function parseResponse(response) {
-  if (response.status === 204) {
-    return null;
-  }
+function buildAxiosError(error, fallbackMessage = "Error en la petición") {
+  const response = error.response;
+  const data = response?.data;
 
-  const contentType = response.headers.get("content-type");
+  const message =
+    data?.message ||
+    data?.error ||
+    (typeof data === "string" ? data : null) ||
+    error.message ||
+    fallbackMessage;
 
-  if (contentType?.includes("application/json")) {
-    return response.json();
-  }
+  const normalizedError = new Error(message);
 
-  if (contentType?.includes("text/")) {
-    return response.text();
-  }
+  normalizedError.status = response?.status ?? null;
+  normalizedError.errors = data?.errors ?? null;
+  normalizedError.data = data ?? null;
+  normalizedError.originalError = error;
 
-  return null;
+  return normalizedError;
 }
 
-function buildError(data, fallbackMessage, response) {
-  const error = new Error(
-    data?.message || data?.error || data || fallbackMessage,
-  );
+async function clearExpiredSession() {
+  await dispatchRedux({
+    type: "auth/clearAuthState",
+  });
 
-  error.status = response?.status ?? null;
-  error.errors = data?.errors ?? null;
-  error.data = data ?? null;
-
-  return error;
+  window.dispatchEvent(new Event("auth:session-expired"));
 }
+
 /**
  * Refreshes the access token using the refresh token.
  * Ensures that only one refresh request is made at a time.
@@ -59,16 +71,10 @@ function buildError(data, fallbackMessage, response) {
  */
 export async function refreshAccessToken() {
   if (!refreshPromise) {
-    refreshPromise = fetch(`${API_URL}/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-    })
+    refreshPromise = refreshClient
+      .post("/auth/refresh")
       .then(async (response) => {
-        const data = await parseResponse(response);
-
-        if (!response.ok) {
-          throw buildError(data, "No se pudo renovar la sesión", response);
-        }
+        const data = response.data;
 
         if (!data?.accessToken) {
           throw new Error("El backend no devolvió un accessToken");
@@ -81,6 +87,9 @@ export async function refreshAccessToken() {
 
         return data;
       })
+      .catch((error) => {
+        throw buildAxiosError(error, "No se pudo renovar la sesión");
+      })
       .finally(() => {
         refreshPromise = null;
       });
@@ -89,79 +98,84 @@ export async function refreshAccessToken() {
   return refreshPromise;
 }
 
-async function buildRequestConfig(options) {
-  const { body, headers = {}, auth = true, ...customOptions } = options;
+apiClient.interceptors.request.use(async (config) => {
+  const requiresAuth = config._requiresAuth !== false;
 
-  const isFormData = body instanceof FormData;
-  const accessToken = auth ? await getAccessTokenFromRedux() : null;
-
-  const requestHeaders = {
-    ...(!isFormData && body !== undefined && body !== null
-      ? { "Content-Type": "application/json" }
-      : {}),
-    ...headers,
-    ...(auth && accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-  };
-
-  return {
-    ...customOptions,
-    credentials: "include",
-    headers: requestHeaders,
-    body:
-      body !== undefined && body !== null
-        ? isFormData
-          ? body
-          : JSON.stringify(body)
-        : undefined,
-  };
-}
-
-async function sendRequest(endpoint, options = {}, retry = true) {
-  const { auth = true, skipAuthRefresh = false } = options;
-
-  const config = await buildRequestConfig(options);
-
-  const response = await fetch(`${API_URL}${endpoint}`, config);
-  const data = await parseResponse(response);
-
-  if (response.status === 401 && auth && !skipAuthRefresh) {
-    if (!retry) {
-      await dispatchRedux({
-        type: "auth/clearAuthState",
-      });
-
-      throw new Error("Sesión expirada. Volvé a iniciar sesión.");
-    }
-
-    try {
-      await refreshAccessToken();
-
-      return sendRequest(endpoint, options, false);
-    } catch (error) {
-      await dispatchRedux({
-        type: "auth/clearAuthState",
-      });
-
-      throw new Error("Sesión expirada. Volvé a iniciar sesión.");
-    }
+  if (!requiresAuth) {
+    return config;
   }
 
-  if (!response.ok) {
-    throw buildError(data, "Error en la petición", response);
+  const accessToken = await getAccessTokenFromRedux();
+
+  if (accessToken) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  return data;
-}
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  (response) => response.data,
+
+  async (error) => {
+    const originalRequest = error.config;
+
+    const status = error.response?.status;
+    const requiresAuth = originalRequest?._requiresAuth !== false;
+    const skipAuthRefresh = Boolean(originalRequest?._skipAuthRefresh);
+
+    if (status === 401 && requiresAuth && !skipAuthRefresh) {
+      if (originalRequest._retry) {
+        await clearExpiredSession();
+        throw new Error("Sesión expirada. Volvé a iniciar sesión.");
+      }
+
+      originalRequest._retry = true;
+
+      try {
+        const data = await refreshAccessToken();
+
+        originalRequest.headers = originalRequest.headers ?? {};
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+
+        return apiClient(originalRequest);
+      } catch {
+        await clearExpiredSession();
+        throw new Error("Sesión expirada. Volvé a iniciar sesión.");
+      }
+    }
+
+    throw buildAxiosError(error);
+  },
+);
 
 /**
  * Makes an API request to the specified endpoint with the given options.
  * Automatically handles token refresh on 401 responses.
  *
  * @param {string} endpoint API endpoint to call (e.g., "/users").
- * @param {Object} [options={}] Optional configuration for the request. see: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#options
+ * @param {Object} [options={}] Optional configuration for the request.
  * @returns {Promise<any>} A Promise that resolves to the response data.
  * @throws {Error} If the request fails or the session is expired.
  */
 export async function request(endpoint, options = {}) {
-  return sendRequest(endpoint, options, true);
+  const {
+    body,
+    method = "GET",
+    headers,
+    auth = true,
+    skipAuthRefresh = false,
+    ...customOptions
+  } = options;
+
+  return apiClient({
+    url: endpoint,
+    method,
+    data: body,
+    headers,
+    _requiresAuth: auth,
+    _skipAuthRefresh: skipAuthRefresh,
+    ...customOptions,
+  });
 }
