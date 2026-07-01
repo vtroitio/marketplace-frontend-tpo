@@ -1,32 +1,34 @@
-import { Card, AppLink, Button } from "../components/ui";
+import { useEffect } from "react";
+import { Card, AppLink, Button, Spinner } from "../components/ui";
 import { RightArrowIcon, CompassIcon } from "../components/icons";
 import TitanImage from "../assets/home-titan.png";
-import hoodieImage from "../assets/product-hoodie.png";
-import tshirtImage from "../assets/product-tshirt.png";
-import { useSelector } from "react-redux";
+// import hoodieImage from "../assets/product-hoodie.png";
+// import tshirtImage from "../assets/product-tshirt.png";
+import { useDispatch, useSelector } from "react-redux";
 import { hasRole, ROLES } from "../helpers/roles";
 import { selectUserRoleCode } from "../features/auth";
+import { fetchExploreProducts } from "../features/products";
 
-const featuredProducts = [
-  {
-    id: 1,
-    title: 'Hoodie Type-01 "Ghost"',
-    price: 120,
-    image: hoodieImage,
-  },
-  {
-    id: 2,
-    title: "T-Shirt Unit-02",
-    price: 45,
-    image: tshirtImage,
-  },
-  {
-    id: 3,
-    title: "T-Shirt Unit-02",
-    price: 45,
-    image: tshirtImage,
-  },
-];
+// const featuredProducts = [
+//   {
+//     id: 1,
+//     title: 'Hoodie Type-01 "Ghost"',
+//     price: 120,
+//     image: hoodieImage,
+//   },
+//   {
+//     id: 2,
+//     title: "T-Shirt Unit-02",
+//     price: 45,
+//     image: tshirtImage,
+//   },
+//   {
+//     id: 3,
+//     title: "T-Shirt Unit-02",
+//     price: 45,
+//     image: tshirtImage,
+//   },
+// ];
 
 function BecomeSellerSection() {
   return (
@@ -77,10 +79,22 @@ function SellerDashboardSection() {
 }
 
 export function HomePage() {
+  const dispatch = useDispatch();
+
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const userRole = useSelector(selectUserRoleCode);
-
   const isSeller = isAuthenticated && hasRole(ROLES.SELLER, userRole);
+  const featuredProducts = useSelector(
+    (state) => state.products.featured.items,
+  );
+  const productsLoading = useSelector((state) => state.products.loading);
+
+  const mainFeaturedProduct = featuredProducts[0];
+  const secondaryFeaturedProducts = featuredProducts.slice(1, 3);
+
+  useEffect(() => {
+    dispatch(fetchExploreProducts());
+  }, [dispatch]);
 
   return (
     <div className="bg-neutral">
@@ -88,7 +102,7 @@ export function HomePage() {
         className="h-230 relative flex items-center justify-center overflow-hidden border-secondary bg-neutral px-6 py-16 text-center"
         style={{
           /* Aplicamos el gris hexadecimal seleccionado */
-          backgroundColor: "#5f5e5e", 
+          backgroundColor: "#5f5e5e",
           backgroundImage: `linear-gradient(rgba(250,250,250,0.12), rgba(250,250,250,0.12)), url(${TitanImage})`,
           backgroundPosition: "center center, center bottom",
           backgroundRepeat: "no-repeat, no-repeat",
@@ -123,29 +137,41 @@ export function HomePage() {
           </AppLink>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(220px,1fr)] md:items-stretch">
-          <Card
-            className="md:h-full md:max-w-none"
-            image={featuredProducts[0].image}
-            title={featuredProducts[0].title}
-            price={featuredProducts[0].price}
-            to={`/explore/${featuredProducts[0].id}`}
-          />
-
-          <div className="grid gap-6 md:h-full md:grid-rows-2">
-            {featuredProducts.slice(1).map((product) => (
-              <Card
-                key={product.id}
-                variant="small"
-                className="md:h-full md:max-w-none"
-                image={product.image}
-                title={product.title}
-                price={product.price}
-                to={`/explore/${product.id}`}
-              />
-            ))}
+        {productsLoading && featuredProducts.length === 0 ? (
+          <div className="flex justify-center py-20">
+            <Spinner />
           </div>
-        </div>
+        ) : featuredProducts.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(220px,1fr)] md:items-stretch">
+            {mainFeaturedProduct && (
+              <Card
+                className="md:h-full md:max-w-none"
+                image={mainFeaturedProduct.coverImagePath}
+                title={mainFeaturedProduct.name}
+                price={mainFeaturedProduct.price}
+                to={`/explore/${mainFeaturedProduct.id}`}
+              />
+            )}
+
+            <div className="grid gap-6 md:h-full md:grid-rows-2">
+              {secondaryFeaturedProducts.map((product) => (
+                <Card
+                  key={product.id}
+                  variant="small"
+                  className="md:h-full md:max-w-none"
+                  image={product.coverImagePath}
+                  title={product.name}
+                  price={product.price}
+                  to={`/explore/${product.id}`}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="py-20 text-center text-tertiary">
+            No hay productos destacados disponibles.
+          </div>
+        )}
       </section>
 
       {isSeller ? <SellerDashboardSection /> : <BecomeSellerSection />}
