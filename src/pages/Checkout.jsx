@@ -6,6 +6,7 @@ import { Button } from "../components/ui/Button";
 import { CouponIcon } from "../components/icons";
 import { useToast } from "../toast/ToastContext";
 import { formatCurrency } from "../helpers/formatters";
+import { validatePaymentData } from "../helpers/paymentValidation";
 import {
   applyCheckoutCoupon,
   confirmCheckout,
@@ -22,7 +23,8 @@ const emptyCheckoutForm = {
   address: "",
   city: "",
   postalCode: "",
-  cardName: "",
+  cardNumber: "",
+  cardHolder: "",
   cardExpiration: "",
   cardCvv: "",
 };
@@ -52,6 +54,7 @@ export function Checkout() {
   const validationStartedRef = useRef(false);
 
   const [formData, setFormData] = useState(emptyCheckoutForm);
+  const [paymentErrors, setPaymentErrors] = useState({});
 
   const couponCode = useSelector((state) => state.checkout.couponCode);
   const appliedCoupon = useSelector((state) => state.checkout.appliedCoupon);
@@ -105,6 +108,11 @@ export function Checkout() {
       ...prev,
       [name]: value,
     }));
+
+    setPaymentErrors((prev) => ({
+      ...prev,
+      [name]: null,
+    }));
   };
 
   const handleApplyCoupon = async () => {
@@ -134,6 +142,18 @@ export function Checkout() {
 
   const handleConfirmPayment = async (e) => {
     e.preventDefault();
+
+    const payment = validatePaymentData({
+      cardNumber: formData.cardNumber,
+      cardHolder: formData.fullName,
+      expirationDate: formData.cardExpiration,
+      cvv: formData.cardCvv,
+    });
+
+    if (!payment.isValid) {
+      setPaymentErrors(payment.errors);
+      return;
+    }
 
     const result = await dispatch(confirmCheckout(formData));
 
@@ -176,6 +196,9 @@ export function Checkout() {
                 placeholder="Ingresá tu nombre"
                 required
               />
+              {paymentErrors.cardHolder && (
+                <p className="text-primary">{paymentErrors.cardHolder}</p>
+              )}
 
               <Input
                 label="Dirección"
@@ -217,36 +240,68 @@ export function Checkout() {
             </div>
 
             <div className="space-y-4">
-              <Input
-                label="Número de tarjeta"
-                type="text"
-                name="cardNumber"
-                value={formData.cardNumber}
-                onChange={handleChange}
-                placeholder="0000 0000 0000 0000"
-                required
-              />
+              <div className="flex flex-col gap-2">
+                <Input
+                  label="Nombre del titular"
+                  type="text"
+                  name="cardHolder"
+                  value={formData.cardHolder}
+                  onChange={handleChange}
+                  placeholder="Nombre completo"
+                  required
+                />
+                {paymentErrors.cardHolder && (
+                  <p className="text-primary">{paymentErrors.cardHolder}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Input
+                  label="Número de tarjeta"
+                  type="text"
+                  name="cardNumber"
+                  value={formData.cardNumber}
+                  onChange={handleChange}
+                  placeholder="0000 0000 0000 0000"
+                  required
+                />
+                {paymentErrors.cardNumber && (
+                  <p className="text-primary">{paymentErrors.cardNumber}</p>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Fecha de vencimiento"
-                  type="text"
-                  name="cardExpiration"
-                  value={formData.cardExpiration}
-                  onChange={handleChange}
-                  placeholder="MM/AA"
-                  required
-                />
+                <div className="flex flex-col gap-2">
+                  <Input
+                    label="Fecha de vencimiento"
+                    type="text"
+                    name="cardExpiration"
+                    value={formData.cardExpiration}
+                    onChange={handleChange}
+                    placeholder="MM/AA"
+                    required
+                  />
+                  {paymentErrors.expirationDate && (
+                    <p className="text-primary">
+                      {paymentErrors.expirationDate}
+                    </p>
+                  )}
+                </div>
 
-                <Input
-                  label="CVV"
-                  type="text"
-                  name="cardCvv"
-                  value={formData.cardCvv}
-                  onChange={handleChange}
-                  placeholder="123"
-                  required
-                />
+                <div className="flex flex-col gap-2">
+                  <Input
+                    label="CVV"
+                    type="text"
+                    name="cardCvv"
+                    value={formData.cardCvv}
+                    onChange={handleChange}
+                    placeholder="123"
+                    required
+                  />
+                  {paymentErrors.cvv && (
+                    <p className="text-primary">{paymentErrors.cvv}</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
