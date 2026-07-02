@@ -85,17 +85,28 @@ function findVariantByColorAndSize(
 
 function getImagesByColor(variants = [], selectedColorId) {
   if (!selectedColorId) return [];
+
   const imagesMap = new Map();
+
   variants.forEach((variant) => {
     const color = getColor(variant);
+
     if (color?.id !== selectedColorId) return;
+
     variant.images?.forEach((image) => {
-      if (!imagesMap.has(image.id)) {
-        imagesMap.set(image.id, image);
+      const imageKey = image.path ?? image.url;
+
+      if (!imageKey) return;
+
+      if (!imagesMap.has(imageKey)) {
+        imagesMap.set(imageKey, image);
       }
     });
   });
-  return Array.from(imagesMap.values()).sort((a, b) => a.position - b.position);
+
+  return Array.from(imagesMap.values()).sort(
+    (a, b) => (a.position ?? 0) - (b.position ?? 0),
+  );
 }
 
 function SizeGuideModal({ onClose }) {
@@ -124,10 +135,18 @@ function SizeGuideModal({ onClose }) {
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b border-secondary/40">
-              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">Talla</th>
-              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">Pecho (cm)</th>
-              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">Cintura (cm)</th>
-              <th className="text-left py-2 font-bold uppercase tracking-[1.2px] text-xs">Largo (cm)</th>
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
+                Talla
+              </th>
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
+                Pecho (cm)
+              </th>
+              <th className="text-left py-2 pr-4 font-bold uppercase tracking-[1.2px] text-xs">
+                Cintura (cm)
+              </th>
+              <th className="text-left py-2 font-bold uppercase tracking-[1.2px] text-xs">
+                Largo (cm)
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -241,7 +260,9 @@ function ReviewModal({ productId, onClose }) {
             )}
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase tracking-[1.2px] block">Título</label>
+            <label className="text-xs font-bold uppercase tracking-[1.2px] block">
+              Título
+            </label>
             <input
               type="text"
               required
@@ -253,7 +274,9 @@ function ReviewModal({ productId, onClose }) {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase tracking-[1.2px] block">Comentario</label>
+            <label className="text-xs font-bold uppercase tracking-[1.2px] block">
+              Comentario
+            </label>
             <textarea
               required
               maxLength={500}
@@ -300,7 +323,9 @@ export function ProductDetailPage() {
   );
 
   const canReview =
-    isAuthenticated && user?.role?.code === ROLES.BUYER && !isOwner;
+    isAuthenticated &&
+    (user?.role?.code === ROLES.BUYER || user?.role?.code === ROLES.SELLER) &&
+    !isOwner;
 
   useEffect(() => {
     dispatch(fetchProductById(productId));
@@ -316,15 +341,17 @@ export function ProductDetailPage() {
     const firstVariant = product.variants?.[0] ?? null;
     const firstColor = firstVariant ? getColor(firstVariant) : null;
     const firstSize = firstVariant ? getSize(firstVariant) : null;
-    const firstImage =
-      product.coverImagePath ?? firstVariant?.images?.[0]?.path ?? null;
+    const firstImage = firstVariant?.images?.[0]?.path ?? null;
 
     setSelectedColorId(firstColor?.id ?? null);
     setSelectedSizeId(firstSize?.id ?? null);
     setSelectedImage(firstImage);
   }, [product]);
 
-  const colors = useMemo(() => getUniqueColors(product?.variants ?? []), [product]);
+  const colors = useMemo(
+    () => getUniqueColors(product?.variants ?? []),
+    [product],
+  );
 
   const availableSizes = useMemo(
     () => getSizesByColor(product?.variants ?? [], selectedColorId),
@@ -332,7 +359,12 @@ export function ProductDetailPage() {
   );
 
   const selectedVariant = useMemo(
-    () => findVariantByColorAndSize(product?.variants ?? [], selectedColorId, selectedSizeId),
+    () =>
+      findVariantByColorAndSize(
+        product?.variants ?? [],
+        selectedColorId,
+        selectedSizeId,
+      ),
     [product, selectedColorId, selectedSizeId],
   );
 
@@ -347,13 +379,7 @@ export function ProductDetailPage() {
   );
 
   const selectedColorImages = useMemo(() => {
-    const images = getImagesByColor(product?.variants ?? [], selectedColorId);
-    const cover = product?.coverImagePath;
-    if (!cover) return images;
-    return [
-      ...images.filter((img) => img.path === cover),
-      ...images.filter((img) => img.path !== cover),
-    ];
+    return getImagesByColor(product?.variants ?? [], selectedColorId);
   }, [product, selectedColorId]);
 
   const imagesToShow = selectedColorImages;
@@ -365,10 +391,9 @@ export function ProductDetailPage() {
   }, [reviews]);
 
   const displayedImage = useMemo(
-    () => selectedColorImages?.[0]?.path ?? product?.coverImagePath,
-    [selectedColorImages, product],
+    () => selectedColorImages?.[0]?.path ?? null,
+    [selectedColorImages],
   );
-
   function handleColorSelect(colorId) {
     setSelectedColorId(colorId);
     const sizesForColor = getSizesByColor(product?.variants ?? [], colorId);
@@ -388,7 +413,7 @@ export function ProductDetailPage() {
         price: selectedVariant.price,
         quantity: 1,
         maxStock: selectedVariant.stock,
-        image: product.coverImagePath,
+        image: selectedImage ?? displayedImage,
       }),
     );
 
@@ -399,12 +424,14 @@ export function ProductDetailPage() {
           duration: 3500,
         });
       }
+
       if (result.payload.status === "ERROR") {
         toast.error(result.payload.message, {
           title: "Error al agregar al carrito",
           duration: 3500,
         });
       }
+
       return;
     }
 
@@ -435,7 +462,9 @@ export function ProductDetailPage() {
 
   return (
     <div className="bg-neutral min-h-screen">
-      {showSizeGuide && <SizeGuideModal onClose={() => setShowSizeGuide(false)} />}
+      {showSizeGuide && (
+        <SizeGuideModal onClose={() => setShowSizeGuide(false)} />
+      )}
       {showReviewModal && (
         <ReviewModal
           productId={productId}
@@ -458,8 +487,13 @@ export function ProductDetailPage() {
                     type="button"
                     onClick={() => {
                       const current = selectedImage ?? displayedImage;
-                      const idx = imagesToShow.findIndex((img) => img.path === current);
-                      const prev = imagesToShow[(idx - 1 + imagesToShow.length) % imagesToShow.length];
+                      const idx = imagesToShow.findIndex(
+                        (img) => img.path === current,
+                      );
+                      const prev =
+                        imagesToShow[
+                          (idx - 1 + imagesToShow.length) % imagesToShow.length
+                        ];
                       setSelectedImage(prev.path);
                     }}
                     className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border border-secondary w-9 h-9 flex items-center justify-center transition-opacity cursor-pointer"
@@ -471,8 +505,11 @@ export function ProductDetailPage() {
                     type="button"
                     onClick={() => {
                       const current = selectedImage ?? displayedImage;
-                      const idx = imagesToShow.findIndex((img) => img.path === current);
-                      const next = imagesToShow[(idx + 1) % imagesToShow.length];
+                      const idx = imagesToShow.findIndex(
+                        (img) => img.path === current,
+                      );
+                      const next =
+                        imagesToShow[(idx + 1) % imagesToShow.length];
                       setSelectedImage(next.path);
                     }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white border border-secondary w-9 h-9 flex items-center justify-center transition-opacity cursor-pointer"
@@ -510,7 +547,9 @@ export function ProductDetailPage() {
             <div>
               <h1>{product.name}</h1>
               <div className="mt-2">
-                <h3>{formatCurrency(selectedVariant?.price ?? product.price)}</h3>
+                <h3>
+                  {formatCurrency(selectedVariant?.price ?? product.price)}
+                </h3>
               </div>
               <div className="mt-2 text-sm text-tertiary">
                 Stock disponible: {selectedVariant?.stock ?? 0}
@@ -523,8 +562,12 @@ export function ProductDetailPage() {
 
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="text-sm font-bold uppercase tracking-[1.2px]">Color</div>
-                <div className="text-sm text-tertiary">{selectedColor?.value ?? "Seleccionar"}</div>
+                <div className="text-sm font-bold uppercase tracking-[1.2px]">
+                  Color
+                </div>
+                <div className="text-sm text-tertiary">
+                  {selectedColor?.value ?? "Seleccionar"}
+                </div>
               </div>
               <div className="flex gap-3">
                 {colors.map((color) => {
@@ -536,7 +579,9 @@ export function ProductDetailPage() {
                       title={color.value}
                       onClick={() => handleColorSelect(color.id)}
                       className={`w-7 h-7 border-2 transition-all ${
-                        isSelected ? "border-primary scale-110" : "border-secondary"
+                        isSelected
+                          ? "border-primary scale-110"
+                          : "border-secondary"
                       }`}
                       style={{ backgroundColor: color.hexColor }}
                     />
@@ -547,7 +592,9 @@ export function ProductDetailPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-bold uppercase tracking-[1.2px]">Talla</div>
+                <div className="text-sm font-bold uppercase tracking-[1.2px]">
+                  Talla
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowSizeGuide(true)}
@@ -587,7 +634,11 @@ export function ProductDetailPage() {
                 {selectedVariant?.stock > 0 ? "Añadir al carrito" : "Sin stock"}
               </Button>
             ) : (
-              <Button to={`/sell/edit/${product.id}`} fullWidth variant="outline">
+              <Button
+                to={`/sell/edit/${product.id}`}
+                fullWidth
+                variant="outline"
+              >
                 <PencilIcon size={18} />
                 Editar producto
               </Button>
@@ -609,18 +660,26 @@ export function ProductDetailPage() {
                     <StarIcon
                       key={star}
                       size={16}
-                      className={star <= Math.round(rating / 2) ? "text-primary" : "text-tertiary"}
+                      className={
+                        star <= Math.round(rating / 2)
+                          ? "text-primary"
+                          : "text-tertiary"
+                      }
                     />
                   ))}
                   <div className="text-sm text-tertiary ml-1">
-                    {rating}/10 ({reviews.length} reseña{reviews.length !== 1 ? "s" : ""})
+                    {rating}/10 ({reviews.length} reseña
+                    {reviews.length !== 1 ? "s" : ""})
                   </div>
                 </div>
               )}
             </div>
 
             {canReview ? (
-              <Button variant="outline" onClick={() => setShowReviewModal(true)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowReviewModal(true)}
+              >
                 Escribir reseña
               </Button>
             ) : isAuthenticated && !canReview ? (
@@ -641,18 +700,25 @@ export function ProductDetailPage() {
           ) : reviews.length > 0 ? (
             <div className="space-y-8">
               {reviews.map((review) => (
-                <div key={review.id} className="border-b border-secondary/20 pb-8">
+                <div
+                  key={review.id}
+                  className="border-b border-secondary/20 pb-8"
+                >
                   <div className="flex items-center gap-2 mb-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <StarIcon
                         key={star}
                         size={14}
                         className={
-                          star <= Math.round(review.rating / 2) ? "text-primary" : "text-tertiary"
+                          star <= Math.round(review.rating / 2)
+                            ? "text-primary"
+                            : "text-tertiary"
                         }
                       />
                     ))}
-                    <span className="text-xs text-tertiary ml-1">{review.rating}/10</span>
+                    <span className="text-xs text-tertiary ml-1">
+                      {review.rating}/10
+                    </span>
                   </div>
                   <div className="text-sm font-bold uppercase tracking-[1.2px] mb-2">
                     {review.title}

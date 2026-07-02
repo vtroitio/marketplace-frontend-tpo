@@ -42,7 +42,7 @@ const initialState = {
   explore: {
     content: [],
     page: 0,
-    size: 12,
+    size: 9,
     totalPages: 0,
     totalElements: 0,
     loading: false,
@@ -180,7 +180,9 @@ const productSlice = createSlice({
       .addCase(fetchProductFilterOptions.fulfilled, (state, action) => {
         state.filterOptions.loading = false;
         state.filterOptions.initialized = true;
-        state.filterOptions.categories = action.payload.categories;
+        state.filterOptions.categories = (action.payload.categories || []).filter(
+          (category) => category.code !== "HOMBRE" && category.code !== "MUJER",
+        );
         state.filterOptions.sizes = action.payload.sizes;
         state.filterOptions.colors = action.payload.colors;
       })

@@ -34,17 +34,26 @@ export function ExplorePage() {
   const dispatch = useDispatch();
   const debounceRef = useRef(null);
 
-  const filtersLoading = useSelector((state) => state.products.filterOptions.loading);
-  const productsLoading = useSelector((state) => state.products.explore.loading);
+  const filtersLoading = useSelector(
+    (state) => state.products.filterOptions.loading,
+  );
+  const productsLoading = useSelector(
+    (state) => state.products.explore.loading,
+  );
   const error = useSelector((state) => state.products.explore.error);
 
   const products = useSelector((state) => state.products.explore.content);
-  const categories = useSelector((state) => state.products.filterOptions.categories);
+  const categories = useSelector(
+    (state) => state.products.filterOptions.categories,
+  );
   const sizes = useSelector((state) => state.products.filterOptions.sizes);
   const colors = useSelector((state) => state.products.filterOptions.colors);
 
-  const draftFilters = useSelector((state) => state.products.explore.draftFilters);
-  const activeFiltersCount = useSelector(selectExploreActiveFiltersCount)
+  const draftFilters = useSelector(
+    (state) => state.products.explore.draftFilters,
+  );
+  const appliedFilters = useSelector((state) => state.products.explore.filters);
+  const activeFiltersCount = useSelector(selectExploreActiveFiltersCount);
   const exploreQueryKey = useSelector(selectExploreQueryKey);
 
   useEffect(() => {
@@ -56,6 +65,12 @@ export function ExplorePage() {
   }, [dispatch, exploreQueryKey]);
 
   useEffect(() => {
+    const draftSearch = draftFilters.search.trim();
+    const appliedSearch = appliedFilters.search.trim();
+
+    if (draftSearch === appliedSearch) {
+      return;
+    }
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
@@ -65,10 +80,15 @@ export function ExplorePage() {
     }, 500);
 
     return () => clearTimeout(debounceRef.current);
-  }, [dispatch, draftFilters.search]);
+  }, [dispatch, draftFilters.search, appliedFilters.search]);
 
   const handleSearchKeyDown = (e) => {
     if (e.key !== "Enter") return;
+
+    const draftSearch = draftFilters.search.trim();
+    const appliedSearch = appliedFilters.search.trim();
+
+    if (draftSearch === appliedSearch) return;
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -228,9 +248,7 @@ export function ExplorePage() {
                   type="number"
                   placeholder="Min"
                   value={draftFilters.minPrice}
-                  onChange={(e) =>
-                    dispatch(setExploreMinPrice(e.target.value))
-                  }
+                  onChange={(e) => dispatch(setExploreMinPrice(e.target.value))}
                   className="w-full border border-secondary px-3 py-2 bg-transparent text-sm focus:outline-none"
                 />
 
@@ -240,9 +258,7 @@ export function ExplorePage() {
                   type="number"
                   placeholder="Max"
                   value={draftFilters.maxPrice}
-                  onChange={(e) =>
-                    dispatch(setExploreMaxPrice(e.target.value))
-                  }
+                  onChange={(e) => dispatch(setExploreMaxPrice(e.target.value))}
                   className="w-full border border-secondary px-3 py-2 bg-transparent text-sm focus:outline-none"
                 />
               </div>
