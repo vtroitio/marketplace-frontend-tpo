@@ -7,6 +7,17 @@ export const selectProductsPage = (state) => state.products.page;
 export const selectProductsTotalPages = (state) => state.products.totalPages;
 export const selectProductsTotalElements = (state) => state.products.totalElements;
 
+export const selectOwnedSearch = (state) => state.products.ownedSearch;
+
+export const selectOwnedProductsFiltered = (state) => {
+  const items = state.products.items;
+  const search = state.products.ownedSearchApplied;
+  if (!search) return items;
+  return items.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase())
+  );
+};
+
 export const selectExploreActiveFiltersCount = (state) => {
   const filters = state.products.explore.draftFilters;
 

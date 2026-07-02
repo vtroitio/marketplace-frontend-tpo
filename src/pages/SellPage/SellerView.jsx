@@ -8,7 +8,10 @@ import {
   removeProduct,
   toggleProductActive,
   setPage,
-  selectOwnedProducts,
+  setOwnedSearch,
+  applyOwnedSearch,
+  selectOwnedSearch,
+  selectOwnedProductsFiltered,
   selectProductsLoading,
   selectProductsError,
   selectProductsPage,
@@ -34,7 +37,8 @@ function getPageWindow(page, totalPages) {
 export function SellerView() {
   const dispatch = useDispatch();
 
-  const products = useSelector(selectOwnedProducts);
+  const search = useSelector(selectOwnedSearch);
+  const filteredProducts = useSelector(selectOwnedProductsFiltered);
   const loading = useSelector(selectProductsLoading);
   const error = useSelector(selectProductsError);
   const page = useSelector(selectProductsPage);
@@ -57,6 +61,12 @@ export function SellerView() {
     dispatch(setPage(newPage));
   };
 
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Enter") {
+      dispatch(applyOwnedSearch());
+    }
+  };
+
   const pageWindow = getPageWindow(page, totalPages);
 
   return (
@@ -77,7 +87,7 @@ export function SellerView() {
         </div>
       </div>
 
-      {loading && products.length === 0 ? (
+      {loading && filteredProducts.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-16">
           <Spinner />
         </div>
@@ -91,9 +101,14 @@ export function SellerView() {
             </p>
           </div>
         </div>
-      ) : products.length > 0 || loading ? (
+      ) : totalElements > 0 || loading ? (
         <div className="flex flex-col gap-4 my-8">
-          <SearchBar />
+          <SearchBar
+            value={search}
+            onChange={(e) => dispatch(setOwnedSearch(e.target.value))}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="Buscar producto..."
+          />
           <div
             style={{
               opacity: loading ? 0.4 : 1,
@@ -102,7 +117,7 @@ export function SellerView() {
             }}
           >
             <InventoryTable
-              products={products}
+              products={filteredProducts}
               onToggleActive={handleToggleActive}
               onDeleteProduct={handleDeleteProduct}
             />
