@@ -18,9 +18,13 @@ import {
 import {
   fetchReviews,
   createProductReview,
+  validateCanCreateReview,
+  resetReviewsForNewProduct,
   selectReviews,
   selectReviewsLoading,
   selectReviewsCreating,
+  selectHasPurchasedProduct,
+  selectReviewPurchaseValidating,
 } from "../features/reviews";
 
 const ATTRIBUTES = {
@@ -307,6 +311,10 @@ export function ProductDetailPage() {
 
   const reviews = useSelector(selectReviews);
   const reviewsLoading = useSelector(selectReviewsLoading);
+  const hasPurchased = useSelector(selectHasPurchasedProduct(productId));
+  const validatingPurchase = useSelector(
+    selectReviewPurchaseValidating(productId),
+  );
 
   const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -325,15 +333,23 @@ export function ProductDetailPage() {
   const canReview =
     isAuthenticated &&
     (user?.role?.code === ROLES.BUYER || user?.role?.code === ROLES.SELLER) &&
-    !isOwner;
+    !isOwner &&
+    hasPurchased;
 
   useEffect(() => {
+    dispatch(resetReviewsForNewProduct(productId));
     dispatch(fetchProductById(productId));
-  }, [dispatch, productId]);
-
-  useEffect(() => {
     dispatch(fetchReviews(productId));
   }, [dispatch, productId]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (!user?.id) return;
+    if (!product) return;
+    if (isOwner) return;
+
+    dispatch(validateCanCreateReview(productId));
+  }, [dispatch, productId, isAuthenticated, user?.id, product, isOwner]);
 
   useEffect(() => {
     if (!product) return;
@@ -682,9 +698,13 @@ export function ProductDetailPage() {
               >
                 Escribir reseña
               </Button>
-            ) : isAuthenticated && !canReview ? (
+            ) : isAuthenticated && validatingPurchase ? (
               <span className="text-xs text-tertiary uppercase tracking-[1.2px]">
-                Solo compradores pueden reseñar
+                Validando compra...
+              </span>
+            ) : isAuthenticated ? (
+              <span className="text-xs text-tertiary uppercase tracking-[1.2px]">
+                Solo compradores verificados pueden reseñar
               </span>
             ) : (
               <Button variant="outline" to="/login">
