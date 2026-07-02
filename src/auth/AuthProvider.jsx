@@ -134,8 +134,8 @@ export function AuthProvider({ children }) {
     }
   }, [logoutFrontend, toast]);
 
-  useEffect(() => async () => {
-    await loadCurrentUser();
+  useEffect(() => {
+    loadCurrentUser();
   }, [loadCurrentUser]);
 
   useEffect(() => {
