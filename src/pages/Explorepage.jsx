@@ -15,6 +15,7 @@ import {
   setExploreMaxPrice,
   setExploreMinPrice,
   setExploreSearch,
+  setExplorePage,
   toggleExploreCategory,
   toggleExploreColor,
   toggleExploreSize,
@@ -43,6 +44,8 @@ export function ExplorePage() {
   const error = useSelector((state) => state.products.explore.error);
 
   const products = useSelector((state) => state.products.explore.content);
+  const page = useSelector((state) => state.products.explore.page);
+  const totalPages = useSelector((state) => state.products.explore.totalPages);
   const categories = useSelector(
     (state) => state.products.filterOptions.categories,
   );
@@ -104,6 +107,31 @@ export function ExplorePage() {
   const handleFilter = () => {
     dispatch(applyExploreFilters());
   };
+
+  const handlePageChange = (nextPage) => {
+    if (nextPage < 0 || nextPage >= totalPages) return;
+    if (nextPage === page) return;
+
+    dispatch(setExplorePage(nextPage));
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const pageWindow = Array.from(
+    { length: totalPages },
+    (_, index) => index,
+  ).filter((pageNumber) => {
+    if (totalPages <= 5) return true;
+
+    const isFirstPage = pageNumber === 0;
+    const isLastPage = pageNumber === totalPages - 1;
+    const isNearCurrentPage = Math.abs(pageNumber - page) <= 1;
+
+    return isFirstPage || isLastPage || isNearCurrentPage;
+  });
 
   if (error) {
     return (
@@ -281,16 +309,49 @@ export function ExplorePage() {
                 <Spinner />
               </div>
             ) : products.length > 0 ? (
-              products.map((product) => (
-                <Card
-                  key={product.id}
-                  image={product.coverImagePath}
-                  title={product.name}
-                  price={product.price}
-                  to={`/explore/${product.id}`}
-                  className="max-w-none"
-                />
-              ))
+              <>
+                {products.map((product) => (
+                  <Card
+                    key={product.id}
+                    image={product.coverImagePath}
+                    title={product.name}
+                    price={product.price}
+                    to={`/explore/${product.id}`}
+                    className="max-w-none"
+                  />
+                ))}
+                <div className="col-span-full flex items-center justify-center gap-2 py-4">
+                  {totalPages > 1 && (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => handlePageChange(Math.max(0, page - 1))}
+                        disabled={page === 0}
+                      >
+                        ‹
+                      </Button>
+                      {pageWindow.map((i) => (
+                        <Button
+                          key={i}
+                          variant={i === page ? "primary" : "outline"}
+                          onClick={() => handlePageChange(i)}
+                        >
+                          {i + 1}
+                        </Button>
+                      ))}
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          handlePageChange(Math.min(totalPages - 1, page + 1))
+                        }
+                        disabled={page === totalPages - 1}
+                      >
+                        ›
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </>
             ) : (
               <div className="col-span-3 py-20 text-center">
                 <div className="text-tertiary">

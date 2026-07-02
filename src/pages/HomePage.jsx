@@ -68,7 +68,7 @@ function SellerDashboardSection() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button to="/sell">Ir a mi panel</Button>
-            <Button variant="inverted" to="/sell/create">
+            <Button variant="inverted" to="/sell/new">
               Publicar producto
             </Button>
           </div>
