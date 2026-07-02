@@ -25,6 +25,9 @@ const initialState = {
   loading: false,
   error: null,
 
+  ownedSearch: "",
+  ownedSearchApplied: "",
+
   featured: {
     items: [],
     initialized: false,
@@ -77,6 +80,14 @@ const productSlice = createSlice({
     },
 
     resetProductState: () => initialState,
+
+    setOwnedSearch: (state, action) => {
+      state.ownedSearch = action.payload;
+    },
+
+    applyOwnedSearch: (state) => {
+      state.ownedSearchApplied = state.ownedSearch.trim();
+    },
 
     setExplorePage: (state, action) => {
       state.explore.page = action.payload;
@@ -169,7 +180,7 @@ const productSlice = createSlice({
         const product = state.items.find((p) => p.id === action.payload);
 
         if (product) {
-          product.active = !product.active;
+          product.isActive = !product.isActive;
         }
       })
 
@@ -221,6 +232,8 @@ const productSlice = createSlice({
 export const {
   setPage,
   resetProductState,
+  setOwnedSearch,
+  applyOwnedSearch,
   setExplorePage,
   setExploreSearch,
   applyExploreSearch,
