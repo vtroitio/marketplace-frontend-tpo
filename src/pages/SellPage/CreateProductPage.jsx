@@ -1,83 +1,58 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { LeftArrowIcon } from "../../components/icons";
 import { ProductForm } from "../../components/products";
 import { AppLink, Spinner } from "../../components/ui";
 import {
-  createProduct,
-  getProductById,
-  uploadVariantImages,
-  setCoverImage,
-  getCategories,
-  getAttributes,
-} from "../../api/products";
-import { mapFormToProductRequest } from "../../helpers/productFormMapper";
+  createProductWithImages,
+  fetchProductFilterOptions,
+  selectFilterOptionsError,
+  selectFilterOptionsInitialized,
+  selectFilterOptionsLoading,
+  selectProductFormDataFromFilterOptions,
+} from "../../features/products";
 
 export function CreateProductPage() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const formData = useSelector(selectProductFormDataFromFilterOptions);
+  const filterOptionsLoading = useSelector(selectFilterOptionsLoading);
+  const filterOptionsInitialized = useSelector(selectFilterOptionsInitialized);
+  const filterOptionsError = useSelector(selectFilterOptionsError);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [categoriesData, attributesData] = await Promise.all([
-          getCategories(),
-          getAttributes(),
-        ]);
-
-        setFormData({
-          _categories: categoriesData,
-          _attributes: attributesData,
-        });
-      } catch (err) {
-        setError("Ocurrió un error al cargar el formulario.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+    if (!filterOptionsInitialized && !filterOptionsLoading) {
+      dispatch(fetchProductFilterOptions());
+    }
+  }, [
+    dispatch,
+    filterOptionsInitialized,
+    filterOptionsLoading,
+  ]);
 
   const handleSubmit = async (product) => {
     try {
-      const dto = mapFormToProductRequest(product);
-      const created = await createProduct(dto);
+      setSubmitting(true);
+      setSubmitError(null);
 
-      const fullProduct = await getProductById(created.id);
-
-      let coverImageId = null;
-
-      for (const group of product.variantGroups) {
-        const newImages = group.images.filter((img) => img.file);
-        if (newImages.length === 0) continue;
-
-        const matchingVariant = fullProduct.variants?.find((v) =>
-          v.attributeValues.some((av) => av.id === group.colorAttributeValueId)
-        );
-
-        if (!matchingVariant) continue;
-
-        const files = newImages.map((img) => img.file);
-        const uploaded = await uploadVariantImages(created.id, matchingVariant.id, files);
-
-        if (coverImageId === null && uploaded.length > 0) {
-          coverImageId = uploaded[0].id;
-        }
-      }
-
-      if (coverImageId !== null) {
-        await setCoverImage(created.id, coverImageId);
-      }
+      await dispatch(createProductWithImages(product)).unwrap();
 
       navigate("/sell");
     } catch (error) {
-      // error al crear
+      setSubmitError(error || "Ocurrió un error al crear el producto.");
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const loading =
+    filterOptionsLoading ||
+    (!filterOptionsInitialized && !filterOptionsError);
 
   if (loading) {
     return (
@@ -89,11 +64,12 @@ export function CreateProductPage() {
     );
   }
 
-  if (error) {
+  if (filterOptionsError) {
     return (
       <section className="container mx-auto py-64">
         <div className="w-full grow flex flex-col items-center justify-center gap-8">
           <h1>Error al cargar el formulario</h1>
+          <p>{filterOptionsError}</p>
         </div>
       </section>
     );
@@ -106,12 +82,16 @@ export function CreateProductPage() {
           <LeftArrowIcon />
           <span>Ir al panel de venta</span>
         </AppLink>
+
         <h2>Publicar Nueva Prenda</h2>
       </div>
+
+      {submitError && <p className="mt-4 text-red-500">{submitError}</p>}
+
       <ProductForm
         data={formData}
         onSubmit={handleSubmit}
-        submitLabel="Publicar Prenda"
+        submitLabel={submitting ? "Publicando..." : "Publicar Prenda"}
       />
     </div>
   );

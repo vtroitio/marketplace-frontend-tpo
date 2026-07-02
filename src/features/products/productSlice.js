@@ -35,6 +35,8 @@ const initialState = {
 
   filterOptions: {
     categories: [],
+    allCategories: [],
+    attributes: [],
     sizes: [],
     colors: [],
     loading: false,
@@ -191,7 +193,10 @@ const productSlice = createSlice({
       .addCase(fetchProductFilterOptions.fulfilled, (state, action) => {
         state.filterOptions.loading = false;
         state.filterOptions.initialized = true;
-        state.filterOptions.categories = (action.payload.categories || []).filter(
+        state.filterOptions.allCategories = action.payload.categories || [];
+        state.filterOptions.categories = (
+          action.payload.categories || []
+        ).filter(
           (category) => category.code !== "HOMBRE" && category.code !== "MUJER",
         );
         state.filterOptions.sizes = action.payload.sizes;
