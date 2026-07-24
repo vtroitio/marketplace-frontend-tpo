@@ -1,10 +1,18 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Input } from "../../components/ui/Input";
 import { Textarea } from "../../components/ui/Textarea";
 import { Button } from "../../components/ui/Button";
 import { CheckIcon, DiamondIcon, EyeIcon } from "../../components/icons";
+import { becomeSeller } from "../../api/users";
+import { restoreUserSession } from "../../features/auth";
+import { useToast } from "../../toast/ToastContext";
 
 export function BecomeSellerView() {
+  const dispatch = useDispatch();
+  const toast = useToast();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
   const [formData, setFormData] = useState({
     brandName: "",
     portfolioLink1: "",
@@ -23,21 +31,32 @@ export function BecomeSellerView() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      toast.info("Iniciá sesión para convertirte en vendedor.", {
+        title: "Necesitás una cuenta",
+      });
+      return;
+    }
     setIsSubmitting(true);
     console.log("Formulario enviado:", formData);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setFormData({
-        brandName: "",
-        portfolioLink1: "",
-        portfolioLink2: "",
-        brandConcept: "",
-        motivation: "",
+    try {
+      await becomeSeller();
+      // Refresca el token para que lleve el rol SELLER (si no, la UI cambia
+      // pero las acciones de vendedor darían 403 hasta re-loguear).
+      await dispatch(restoreUserSession()).unwrap();
+      toast.success("¡Ya sos vendedor! Ahora podés publicar tus productos.", {
+        title: "Bienvenido a Skindex",
       });
-      alert("¡Solicitud enviada correctamente! Te contactaremos pronto.");
-    }, 1000);
+    } catch (error) {
+      toast.error(
+        error?.message || "No se pudo procesar la solicitud. Intentá de nuevo.",
+        { title: "Error" },
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

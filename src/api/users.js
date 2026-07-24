@@ -15,3 +15,10 @@ export function updateProfile(userData) {
     body: userData,
   });
 }
+
+export function becomeSeller() {
+  return request("/users/me/become-seller", {
+    method: "POST",
+    auth: true,
+  });
+}
